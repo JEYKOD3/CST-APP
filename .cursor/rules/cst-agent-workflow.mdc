@@ -1,0 +1,12 @@
+---
+description: CST app agent workflow — read skill first, test, PR, minimal tokens
+alwaysApply: true
+---
+
+# CST Agent entry point
+
+Before any CST app work, read **`.cursor/skills/cst-app-develop/SKILL.md`** and follow it exactly.
+
+Quick order: `SPRINT-STATUS.md` → `CLAUDE.md` → `SETUP.md` → implement → test → `verify.sh` → PR.
+
+Do not guess domain rules, payment logic, or schema breaks — ask the user (see `QUESTIONS.md`).

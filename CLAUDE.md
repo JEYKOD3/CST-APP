@@ -24,7 +24,12 @@ Next.js App Router · Clerk auth · Neon Postgres · Drizzle ORM · Tailwind · 
 
 - Feature branch per sprint (`sprint-1-foundation`, etc.)
 - Never force push; never auto-deploy to production
-- Run `npm run lint && npm run build` before finishing
+- Run `npm run verify` before finishing (lint + test + build)
+- **Always open a PR** — see `.cursor/skills/cst-app-develop/PR-WORKFLOW.md`
+
+## Agent skill (read first)
+
+All agents (desktop, phone, Cloud Agent) follow **`.cursor/skills/cst-app-develop/SKILL.md`**
 
 ## Autonomy
 

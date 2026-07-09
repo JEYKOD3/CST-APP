@@ -1,6 +1,6 @@
 # CST App — Context map
 
-Read these **instead of** broad repo exploration.
+Read these **instead of** broad repo exploration. Full layout: [PROJECT-STRUCTURE.md](PROJECT-STRUCTURE.md).
 
 ## Product (one line)
 
@@ -10,26 +10,22 @@ One master schedule + per-practice attendance rosters. Parents sign in; one acco
 
 ```
 src/
-  app/
-    page.tsx              # Public home
-    sign-in/ sign-up/     # Clerk auth
-    (app)/                # Authenticated shell (bottom nav)
-      dashboard/          # Role-aware home
-      schedule/           # Master calendar (read)
-      children/           # Parent: add/list kids
-      team/               # Super admin: modifiable roles
-      attendance/         # Staff roster (Sprint 2+)
-      more/               # Settings shell
-  lib/
-    auth.ts               # Clerk → Neon user sync
-    roles.ts              # Role types + staff bootstrap emails
-  db/
-    schema.ts             # All tables
-    index.ts              # getDb()
+  app/                      # Routes only (thin pages)
+    (app)/                  # Authenticated shell
+    api/                    # Route handlers
+    sign-in/ sign-up/
   components/
-    bottom-nav.tsx
-scripts/
-  seed.ts                 # Venues, fleet, sample schedule
+    layout/                 # bottom-nav, app chrome
+    ui/                     # shared primitives (future shadcn)
+  features/                 # Domain logic — add new code here
+    children/               # actions.ts, queries.ts, components/
+    team/
+    schedule/
+  lib/                      # auth.ts, roles.ts (cross-cutting)
+  db/                       # schema.ts, index.ts
+scripts/seed.ts             # Venues, fleet, sample schedule
+design/assets/              # Mockups only
+public/                     # Served static files (logo, manifest)
 ```
 
 ## Key domain rules

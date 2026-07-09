@@ -1,7 +1,7 @@
 import { UserButton } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
-import { BottomNav } from "@/components/bottom-nav";
+import { BottomNav } from "@/components/layout/bottom-nav";
 import { ensureAppUser } from "@/lib/auth";
 import { canManageTeam, isStaffRole } from "@/lib/roles";
 

@@ -21,7 +21,8 @@ Or: `.cursor/skills/cst-app-develop/scripts/verify.sh`
 | Code | Test file |
 |---|---|
 | `src/lib/foo.ts` | `src/lib/foo.test.ts` |
-| Server action | `src/app/.../actions.test.ts` |
+| `src/features/bar/actions.ts` | `src/features/bar/actions.test.ts` |
+| Server action | `src/features/<name>/actions.test.ts` |
 | API route | `src/app/api/.../route.test.ts` |
 
 ## What to test

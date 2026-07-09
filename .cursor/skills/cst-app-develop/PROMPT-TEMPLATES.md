@@ -6,7 +6,7 @@ Replace `[TASK]` and send to Cursor desktop, phone, or Cloud Agent.
 
 ```
 CST Badminton Club app. Follow .cursor/skills/cst-app-develop/SKILL.md exactly.
-Read SPRINT-STATUS.md and CONTEXT.md first. Run verify.sh before PR.
+Read SPRINT-STATUS.md, PROJECT-STRUCTURE.md, and CONTEXT.md first. Run verify.sh before PR.
 Repo: JEYKOD3/CST-APP. Branch from sprint-1-foundation or create sprint-2-registration.
 
 Task: [TASK]

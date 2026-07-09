@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { assignRole } from "./actions";
+import { assignRole } from "@/features/team/actions";
 import { APP_ROLES } from "@/lib/roles";
 
 const inputClass =

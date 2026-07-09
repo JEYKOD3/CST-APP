@@ -7,6 +7,6 @@ alwaysApply: true
 
 Before any CST app work, read **`.cursor/skills/cst-app-develop/SKILL.md`** and follow it exactly.
 
-Quick order: `SPRINT-STATUS.md` → `CLAUDE.md` → `SETUP.md` → implement → test → `verify.sh` → PR.
+Quick order: `SPRINT-STATUS.md` → `PROJECT-STRUCTURE.md` → `CONTEXT.md` → implement → test → `verify.sh` → PR.
 
-Do not guess domain rules, payment logic, or schema breaks — ask the user (see `QUESTIONS.md`).
+Do not guess domain rules, payment logic, or schema breaks — ask the user (see `QUESTIONS.md`). Place all new code in the correct `src/features/` folder.

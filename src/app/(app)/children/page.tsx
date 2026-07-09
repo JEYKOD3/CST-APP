@@ -1,20 +1,11 @@
-import { and, eq } from "drizzle-orm";
-import { getDb } from "@/db";
-import { players } from "@/db/schema";
 import { ensureAppUser } from "@/lib/auth";
-import { AddChildForm } from "./add-child-form";
-import { removeChild } from "./actions";
+import { removeChild } from "@/features/children/actions";
+import { AddChildForm } from "@/features/children/components/add-child-form";
+import { listChildrenForParent } from "@/features/children/queries";
 
 export default async function ChildrenPage() {
   const user = await ensureAppUser();
-  const db = getDb();
-
-  const children = await db
-    .select()
-    .from(players)
-    .where(
-      and(eq(players.parentUserId, user.id), eq(players.active, true)),
-    );
+  const children = await listChildrenForParent(user.id);
 
   return (
     <main>

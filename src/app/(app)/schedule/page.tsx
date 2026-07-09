@@ -1,38 +1,8 @@
-import { asc, eq, gte } from "drizzle-orm";
-import { getDb } from "@/db";
-import { practiceVenues, scheduleEvents } from "@/db/schema";
-
-function formatWhen(start: Date, end: Date) {
-  const day = start.toLocaleDateString("en-CA", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-  const time = `${start.toLocaleTimeString("en-CA", { hour: "numeric", minute: "2-digit" })} – ${end.toLocaleTimeString("en-CA", { hour: "numeric", minute: "2-digit" })}`;
-  return { day, time };
-}
+import { listUpcomingScheduleEvents } from "@/features/schedule/queries";
+import { formatScheduleWhen } from "@/features/schedule/utils";
 
 export default async function SchedulePage() {
-  const db = getDb();
-  const now = new Date();
-
-  const events = await db
-    .select({
-      id: scheduleEvents.id,
-      title: scheduleEvents.title,
-      type: scheduleEvents.type,
-      startsAt: scheduleEvents.startsAt,
-      endsAt: scheduleEvents.endsAt,
-      notes: scheduleEvents.notes,
-      venueName: practiceVenues.name,
-      venueAddress: practiceVenues.address,
-      region: practiceVenues.region,
-    })
-    .from(scheduleEvents)
-    .innerJoin(practiceVenues, eq(practiceVenues.id, scheduleEvents.venueId))
-    .where(gte(scheduleEvents.endsAt, now))
-    .orderBy(asc(scheduleEvents.startsAt))
-    .limit(50);
+  const events = await listUpcomingScheduleEvents();
 
   return (
     <main>
@@ -48,7 +18,7 @@ export default async function SchedulePage() {
       ) : (
         <ul className="space-y-3">
           {events.map((event) => {
-            const when = formatWhen(event.startsAt, event.endsAt);
+            const when = formatScheduleWhen(event.startsAt, event.endsAt);
             return (
               <li
                 key={event.id}

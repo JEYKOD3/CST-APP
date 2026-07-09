@@ -22,7 +22,14 @@
 
 # misc
 .DS_Store
+**/.DS_Store
+Thumbs.db
 *.pem
+
+# editor / IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
 
 # debug
 npm-debug.log*
@@ -34,9 +41,20 @@ yarn-error.log*
 .env*
 !.env.example
 
-# vercel
+# vercel / clerk local
 .vercel
+.clerk/
 
-# typescript
+# typescript / turbo
 *.tsbuildinfo
 next-env.d.ts
+.turbo
+
+# stray binary uploads — use public/ or design/assets/
+*~mv2.*
+*.zip
+*.pdf
+!design/**
+
+# duplicate assets at repo root (runtime → public/, mockups → design/assets/)
+/cst-logo.jpg

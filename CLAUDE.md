@@ -29,7 +29,7 @@ Next.js App Router · Clerk auth · Neon Postgres · Drizzle ORM · Tailwind · 
 
 ## Agent skill (read first)
 
-All agents (desktop, phone, Cloud Agent) follow **`.cursor/skills/cst-app-develop/SKILL.md`**
+All agents follow **`.cursor/skills/cst-app-develop/SKILL.md`** and **`.cursor/skills/cst-app-develop/PROJECT-STRUCTURE.md`** for file placement.
 
 ## Autonomy
 

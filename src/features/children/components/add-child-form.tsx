@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { addChild } from "./actions";
+import { addChild } from "@/features/children/actions";
 import { PLAYER_LEVELS } from "@/lib/roles";
 
 const inputClass =

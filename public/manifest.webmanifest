@@ -1,0 +1,15 @@
+{
+  "name": "CST Badminton Club",
+  "short_name": "CST",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#8BC34A",
+  "icons": [
+    {
+      "src": "/cst-logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

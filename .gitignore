@@ -53,8 +53,10 @@ next-env.d.ts
 # stray binary uploads — use public/ or design/assets/
 *~mv2.*
 *.zip
-*.pdf
-!design/**
+# design mockups in design/assets/ are tracked; ignore other junk in design/
+design/**
+!design/assets/
+!design/assets/**
 
 # duplicate assets at repo root (runtime → public/, mockups → design/assets/)
 /cst-logo.jpg

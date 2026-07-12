@@ -1,18 +1,21 @@
 import Link from "next/link";
 import { ensureAppUser } from "@/lib/auth";
-import { canManageTeam, formatRole, isStaffRole } from "@/lib/roles";
+import {
+  canManageTeam,
+  formatRoleGroup,
+  isParentAccount,
+  isPlayerAccount,
+  isStaffAccount,
+} from "@/lib/roles";
 
 export default async function DashboardPage() {
   const user = await ensureAppUser();
-  const isStaff = user.roles.some(isStaffRole);
   const greeting = user.displayName ?? user.email.split("@")[0];
 
   return (
     <main>
       <h1 className="mb-1 text-xl font-bold">Hi, {greeting}</h1>
-      <p className="mb-6 text-sm text-zinc-400">
-        {user.roles.map(formatRole).join(" · ")}
-      </p>
+      <p className="mb-6 text-sm text-zinc-400">{formatRoleGroup(user.roles)}</p>
 
       <section className="space-y-3">
         <Link
@@ -25,7 +28,7 @@ export default async function DashboardPage() {
           </p>
         </Link>
 
-        {isStaff ? (
+        {isStaffAccount(user.roles) && (
           <Link
             href="/attendance"
             className="block rounded-xl border border-zinc-800 bg-zinc-900 p-4"
@@ -35,7 +38,9 @@ export default async function DashboardPage() {
               Per-practice roster — who was present, no more texting lists.
             </p>
           </Link>
-        ) : (
+        )}
+
+        {isParentAccount(user.roles) && (
           <Link
             href="/children"
             className="block rounded-xl border border-zinc-800 bg-zinc-900 p-4"
@@ -47,6 +52,16 @@ export default async function DashboardPage() {
           </Link>
         )}
 
+        {isPlayerAccount(user.roles) && (
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+            <h2 className="mb-1 font-semibold">My training</h2>
+            <p className="text-sm text-zinc-400">
+              Teen player account — see Schedule for your sessions. Parents
+              manage registration on their account.
+            </p>
+          </div>
+        )}
+
         {canManageTeam(user.roles) && (
           <Link
             href="/team"
@@ -54,7 +69,7 @@ export default async function DashboardPage() {
           >
             <h2 className="mb-1 font-semibold">Team</h2>
             <p className="text-sm text-zinc-400">
-              Add or remove coaches and admins — availability changes over time.
+              Add or remove coaches and admins — staff cannot also be parents.
             </p>
           </Link>
         )}

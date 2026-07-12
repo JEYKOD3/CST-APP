@@ -3,7 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { ensureAppUser } from "@/lib/auth";
-import { canManageTeam, isStaffRole } from "@/lib/roles";
+import {
+  canManageTeam,
+  isParentAccount,
+  isStaffAccount,
+} from "@/lib/roles";
 
 export default async function AppLayout({
   children,
@@ -15,9 +19,11 @@ export default async function AppLayout({
   const navItems = [
     { href: "/dashboard", label: "Home" },
     { href: "/schedule", label: "Schedule" },
-    ...(user.roles.some(isStaffRole)
+    ...(isStaffAccount(user.roles)
       ? [{ href: "/attendance", label: "Attendance" }]
-      : [{ href: "/children", label: "Kids" }]),
+      : isParentAccount(user.roles)
+        ? [{ href: "/children", label: "Kids" }]
+        : []),
     ...(canManageTeam(user.roles)
       ? [{ href: "/team", label: "Team" }]
       : []),

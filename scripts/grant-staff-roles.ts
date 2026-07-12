@@ -5,6 +5,7 @@ import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { and, eq } from "drizzle-orm";
 import * as schema from "../src/db/schema";
+import { normalizeUserRoles } from "../src/lib/role-sync";
 
 async function main() {
   const email = "jeanemm@hotmail.ca";
@@ -42,7 +43,8 @@ async function main() {
     }
   }
 
-  console.log(`Granted super_admin + coach to ${email}`);
+  await normalizeUserRoles(user.id);
+  console.log(`Granted super_admin + coach to ${email} (parent/player removed if present)`);
 }
 
 main().catch((e) => {

@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db";
 import { appUsers, userRoles } from "@/db/schema";
+import { normalizeUserRoles } from "@/lib/role-sync";
 import {
   type AppRole,
   STAFF_BOOTSTRAP,
@@ -29,19 +30,20 @@ async function ensureUserRoles(userId: string, email: string) {
     await db.insert(userRoles).values(
       rolesToAdd.map((role) => ({ userId, role })),
     );
-    return;
+  } else {
+    const bootstrap = STAFF_BOOTSTRAP[normalized];
+    if (bootstrap) {
+      const have = new Set(existing.map((r) => r.role as AppRole));
+      const missing = bootstrap.filter((role) => !have.has(role));
+      if (missing.length > 0) {
+        await db.insert(userRoles).values(
+          missing.map((role) => ({ userId, role })),
+        );
+      }
+    }
   }
 
-  const bootstrap = STAFF_BOOTSTRAP[normalized];
-  if (!bootstrap) return;
-
-  const have = new Set(existing.map((r) => r.role as AppRole));
-  const missing = bootstrap.filter((role) => !have.has(role));
-  if (missing.length > 0) {
-    await db.insert(userRoles).values(
-      missing.map((role) => ({ userId, role })),
-    );
-  }
+  await normalizeUserRoles(userId);
 }
 
 export async function ensureAppUser(): Promise<SessionUser> {

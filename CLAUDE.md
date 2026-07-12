@@ -13,6 +13,7 @@ Next.js App Router · Clerk auth · Neon Postgres · Drizzle ORM · Tailwind · 
 ## Domain rules
 
 - **Roles are modifiable** — add/remove coaches, admins, parents via app (not hardcoded). Mohammad + Ghaida = super_admin + coach; both help practices and privates.
+- **One account type per login** — staff (super_admin/admin/coach), parent, or teen player — never combined. Staff roles can stack (e.g. super_admin + coach).
 - **Parents sign in** — one parent account → **many children** (~99% of players). Teenagers may have own login (`is_teen_self_managed`).
 - **Player level required**: beginner | intermediate | advanced | elite
 - **4 practice venues** seeded in `scripts/seed.ts`

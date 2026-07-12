@@ -1,10 +1,10 @@
 import { ensureAppUser } from "@/lib/auth";
-import { isStaffRole } from "@/lib/roles";
+import { isStaffAccount } from "@/lib/roles";
 import { redirect } from "next/navigation";
 
 export default async function AttendancePage() {
   const user = await ensureAppUser();
-  if (!user.roles.some(isStaffRole)) redirect("/dashboard");
+  if (!isStaffAccount(user.roles)) redirect("/dashboard");
 
   return (
     <main>

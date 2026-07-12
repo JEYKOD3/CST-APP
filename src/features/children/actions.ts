@@ -5,10 +5,14 @@ import { revalidatePath } from "next/cache";
 import { getDb } from "@/db";
 import { players } from "@/db/schema";
 import { ensureAppUser } from "@/lib/auth";
+import { isParentAccount } from "@/lib/roles";
 import { PLAYER_LEVELS, type PlayerLevel } from "@/lib/roles";
 
 export async function addChild(formData: FormData) {
   const user = await ensureAppUser();
+  if (!isParentAccount(user.roles)) {
+    return { error: "Only parent accounts can manage children." };
+  }
   const firstName = String(formData.get("firstName") ?? "").trim();
   const lastName = String(formData.get("lastName") ?? "").trim();
   const level = String(formData.get("level") ?? "") as PlayerLevel;
@@ -36,6 +40,7 @@ export async function addChild(formData: FormData) {
 
 export async function removeChild(playerId: string) {
   const user = await ensureAppUser();
+  if (!isParentAccount(user.roles)) return;
   const db = getDb();
 
   await db

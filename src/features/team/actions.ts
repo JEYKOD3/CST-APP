@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getDb } from "@/db";
 import { appUsers, userRoles } from "@/db/schema";
 import { ensureAppUser } from "@/lib/auth";
+import { normalizeUserRoles } from "@/lib/role-sync";
 import {
   APP_ROLES,
   type AppRole,
@@ -48,6 +49,8 @@ export async function assignRole(formData: FormData) {
     await db.insert(userRoles).values({ userId: target.id, role });
   }
 
+  await normalizeUserRoles(target.id);
+
   revalidatePath("/team");
   return { ok: true };
 }
@@ -60,6 +63,8 @@ export async function removeRole(userId: string, role: AppRole) {
   await db
     .delete(userRoles)
     .where(and(eq(userRoles.userId, userId), eq(userRoles.role, role)));
+
+  await normalizeUserRoles(userId);
 
   revalidatePath("/team");
 }

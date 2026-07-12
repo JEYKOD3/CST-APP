@@ -3,6 +3,8 @@ import {
   APP_ROLES,
   PLAYER_LEVELS,
   STAFF_BOOTSTRAP,
+  STAFF_INVITE_ROLES,
+  canAccessAdminHub,
   canManageTeam,
   formatRole,
   isStaffRole,
@@ -43,6 +45,17 @@ describe("roles", () => {
     expect(canManageTeam(["super_admin"])).toBe(true);
     expect(canManageTeam(["admin"])).toBe(false);
     expect(canManageTeam(["coach", "admin"])).toBe(false);
+  });
+
+  it("only super_admin can access admin hub", () => {
+    expect(canAccessAdminHub(["super_admin"])).toBe(true);
+    expect(canAccessAdminHub(["admin"])).toBe(false);
+  });
+
+  it("limits staff invite roles to staff only", () => {
+    expect(STAFF_INVITE_ROLES).toEqual(["super_admin", "admin", "coach"]);
+    expect(STAFF_INVITE_ROLES).not.toContain("parent");
+    expect(STAFF_INVITE_ROLES).not.toContain("player");
   });
 
   it("formats role labels", () => {

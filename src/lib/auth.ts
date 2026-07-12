@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db";
 import { appUsers, userRoles } from "@/db/schema";
+import { applyPendingInvites } from "@/features/invites/apply-invites";
 import {
   type AppRole,
   STAFF_BOOTSTRAP,
@@ -70,6 +71,8 @@ export async function ensureAppUser(): Promise<SessionUser> {
       .where(eq(appUsers.id, user.id))
       .returning();
   }
+
+  await applyPendingInvites(db, user.id, email);
 
   const roles = await db
     .select({ role: userRoles.role })

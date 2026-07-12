@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ensureAppUser } from "@/lib/auth";
 import { canManageTeam, formatRole } from "@/lib/roles";
@@ -13,6 +14,9 @@ export default async function TeamPage() {
 
   return (
     <main>
+      <Link href="/admin" className="mb-4 inline-block text-sm text-zinc-500">
+        ← Admin
+      </Link>
       <h1 className="mb-1 text-xl font-bold">Team</h1>
       <p className="mb-6 text-sm text-zinc-400">
         Coaches and admins are modifiable — availability changes with the schedule.

@@ -44,9 +44,11 @@ export async function assignRole(formData: FormData) {
     .where(and(eq(userRoles.userId, target.id), eq(userRoles.role, role)))
     .limit(1);
 
-  if (!existing) {
-    await db.insert(userRoles).values({ userId: target.id, role });
+  if (existing) {
+    return { error: "They already have this role." };
   }
+
+  await db.insert(userRoles).values({ userId: target.id, role });
 
   revalidatePath("/team");
   return { ok: true };

@@ -4,6 +4,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -59,14 +60,37 @@ export const appUsers = pgTable("app_users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const userRoles = pgTable("user_roles", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => appUsers.id, { onDelete: "cascade" }),
-  role: appRoleEnum("role").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const userRoles = pgTable(
+  "user_roles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUsers.id, { onDelete: "cascade" }),
+    role: appRoleEnum("role").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("user_roles_user_id_role_idx").on(table.userId, table.role),
+  ],
+);
+
+/** Pending staff invites — applied when invitee signs in. */
+export const staffInvites = pgTable(
+  "staff_invites",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    email: text("email").notNull(),
+    role: appRoleEnum("role").notNull(),
+    invitedByUserId: uuid("invited_by_user_id").references(() => appUsers.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("staff_invites_email_role_idx").on(table.email, table.role),
+  ],
+);
 
 /** Parent account → many children. Teenagers may have own login (player) or stay linked. */
 export const players = pgTable("players", {

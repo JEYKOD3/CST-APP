@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { ensureAppUser } from "@/lib/auth";
-import { canManageTeam, isStaffRole } from "@/lib/roles";
+import { canAccessAdminHub, isStaffRole } from "@/lib/roles";
 
 export default async function AppLayout({
   children,
@@ -18,8 +18,8 @@ export default async function AppLayout({
     ...(user.roles.some(isStaffRole)
       ? [{ href: "/attendance", label: "Attendance" }]
       : [{ href: "/children", label: "Kids" }]),
-    ...(canManageTeam(user.roles)
-      ? [{ href: "/team", label: "Team" }]
+    ...(canAccessAdminHub(user.roles)
+      ? [{ href: "/admin", label: "Admin" }]
       : []),
     { href: "/more", label: "More" },
   ];

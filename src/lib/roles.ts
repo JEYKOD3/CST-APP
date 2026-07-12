@@ -22,6 +22,7 @@ export const STAFF_BOOTSTRAP: Record<string, AppRole[]> = {
   "ghaidaghaniyu.cstbrossard@gmail.com": ["super_admin", "coach"],
   "m.h.vakili@gmail.com": ["super_admin", "coach"],
   "jeanyao5787@gmail.com": ["coach"],
+  "jeanemm@hotmail.ca": ["super_admin", "coach"],
 };
 
 export function isStaffRole(role: AppRole) {

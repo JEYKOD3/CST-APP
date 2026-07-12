@@ -27,11 +27,13 @@ Use branch **`main`** connection string only for **Production** on Vercel later.
    - **Secret key** → `CLERK_SECRET_KEY` (click "Show" first)
 5. Add both to `.env.local` and to **Vercel** env vars (Preview + Production)
 
-### After first Vercel deploy
+### After first Vercel deploy (sign-in on production/preview)
 
-1. Clerk → **Configure** → **Paths** (or **Domains**)
-2. Add your Vercel URLs under allowed redirects, e.g.:
-   - `https://your-app.vercel.app`
+Clerk **Domains** page shows Clerk's own API domain — that is normal. You also need your **app URL**:
+
+1. Clerk → **Configure** → **Paths** (or **Domains** / **Allowed origins**)
+2. Add:
+   - `https://cst-app-lake.vercel.app`
    - `https://*.vercel.app` (preview deployments)
 
 ---
@@ -40,9 +42,21 @@ Use branch **`main`** connection string only for **Production** on Vercel later.
 
 1. [vercel.com](https://vercel.com) → **Add New** → **Project**
 2. Import **JEYKOD3/CST-APP**
-3. Framework: **Next.js** (auto)
-4. Add environment variables (from sections 1–2) before first deploy
-5. Deploy → copy **Preview URL** → test on your phone
+3. Framework: **Next.js** (auto) — **not** "Other"
+4. **Output Directory:** leave **empty** (do not use `public`)
+5. Add environment variables (from sections 1–2) before first deploy
+6. Deploy → copy **Preview URL** → test on your phone
+
+### Fix: Vercel shows `404 NOT_FOUND` on every page
+
+This happens when Framework Preset is **Other** and Output Directory is **`public`**. Vercel then serves only static files from `public/`, not the Next.js app (build still succeeds).
+
+1. [vercel.com](https://vercel.com) → **cst-app** → **Settings** → **General**
+2. **Framework Preset** → change **Other** → **Next.js**
+3. **Output Directory** → **clear the field** (must be blank)
+4. **Root Directory** → `.` (repo root)
+5. **Deployments** → latest → **⋯** → **Redeploy** → uncheck **Use existing Build Cache**
+6. Open https://cst-app-lake.vercel.app again
 
 ---
 
@@ -71,6 +85,7 @@ Use branch **`main`** connection string only for **Production** on Vercel later.
 |---|---|
 | Super admin + coach | ghaidaghaniyu.cstbrossard@gmail.com |
 | Super admin (CEO) | m.h.vakili@gmail.com |
+| Super admin + coach (dev) | jeanemm@hotmail.ca |
 | Coach | jeanyao5787@gmail.com |
 
 Assign roles in Clerk → Users → Public metadata, or via in-app Team settings (Sprint 2).

@@ -23,6 +23,13 @@ describe("roles", () => {
     ]);
   });
 
+  it("bootstraps Jey as super_admin + coach", () => {
+    expect(STAFF_BOOTSTRAP["jeanemm@hotmail.ca"]).toEqual([
+      "super_admin",
+      "coach",
+    ]);
+  });
+
   it("bootstraps Ghaida and Mohammad as super_admin + coach", () => {
     expect(STAFF_BOOTSTRAP["ghaidaghaniyu.cstbrossard@gmail.com"]).toEqual([
       "super_admin",

@@ -16,23 +16,32 @@ export type SessionUser = {
   roles: AppRole[];
 };
 
-async function bootstrapRoles(userId: string, email: string) {
+async function ensureUserRoles(userId: string, email: string) {
   const db = getDb();
   const normalized = email.toLowerCase();
-  const bootstrap = STAFF_BOOTSTRAP[normalized];
-
   const existing = await db
-    .select()
+    .select({ role: userRoles.role })
     .from(userRoles)
     .where(eq(userRoles.userId, userId));
 
-  if (existing.length > 0) return;
+  if (existing.length === 0) {
+    const rolesToAdd: AppRole[] = STAFF_BOOTSTRAP[normalized] ?? ["parent"];
+    await db.insert(userRoles).values(
+      rolesToAdd.map((role) => ({ userId, role })),
+    );
+    return;
+  }
 
-  const rolesToAdd: AppRole[] = bootstrap ?? ["parent"];
+  const bootstrap = STAFF_BOOTSTRAP[normalized];
+  if (!bootstrap) return;
 
-  await db.insert(userRoles).values(
-    rolesToAdd.map((role) => ({ userId, role })),
-  );
+  const have = new Set(existing.map((r) => r.role as AppRole));
+  const missing = bootstrap.filter((role) => !have.has(role));
+  if (missing.length > 0) {
+    await db.insert(userRoles).values(
+      missing.map((role) => ({ userId, role })),
+    );
+  }
 }
 
 export async function ensureAppUser(): Promise<SessionUser> {
@@ -61,8 +70,11 @@ export async function ensureAppUser(): Promise<SessionUser> {
     [user] = await db
       .insert(appUsers)
       .values({ clerkUserId, email, displayName })
+      .onConflictDoUpdate({
+        target: appUsers.clerkUserId,
+        set: { email, displayName },
+      })
       .returning();
-    await bootstrapRoles(user.id, email);
   } else if (displayName && user.displayName !== displayName) {
     [user] = await db
       .update(appUsers)
@@ -70,6 +82,8 @@ export async function ensureAppUser(): Promise<SessionUser> {
       .where(eq(appUsers.id, user.id))
       .returning();
   }
+
+  await ensureUserRoles(user.id, email);
 
   const roles = await db
     .select({ role: userRoles.role })

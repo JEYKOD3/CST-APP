@@ -25,7 +25,7 @@ export default async function AppLayout({
         ? [{ href: "/children", label: "Kids" }]
         : []),
     ...(canManageTeam(user.roles)
-      ? [{ href: "/team", label: "Team" }]
+      ? [{ href: "/admin", label: "Admin" }]
       : []),
     { href: "/more", label: "More" },
   ];

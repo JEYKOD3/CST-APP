@@ -68,6 +68,19 @@ export const userRoles = pgTable("user_roles", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+/** Pre-assigned roles before first sign-in (super admin invites). */
+export const pendingRoleAssignments = pgTable("pending_role_assignments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  email: text("email").notNull(),
+  role: appRoleEnum("role").notNull(),
+  invitedByUserId: uuid("invited_by_user_id").references(() => appUsers.id, {
+    onDelete: "set null",
+  }),
+  clerkInvitationId: text("clerk_invitation_id"),
+  fulfilledAt: timestamp("fulfilled_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 /** Parent account → many children. Teenagers may have own login (player) or stay linked. */
 export const players = pgTable("players", {
   id: uuid("id").defaultRandom().primaryKey(),

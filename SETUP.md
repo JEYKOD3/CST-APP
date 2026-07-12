@@ -79,6 +79,35 @@ This happens when Framework Preset is **Other** and Output Directory is **`publi
 
 ---
 
+## 6. `NEXT_PUBLIC_APP_URL` (invitation emails)
+
+Used when a super admin invites someone from **Admin** — Clerk invitation links redirect to your sign-up page.
+
+### Vercel (production + preview)
+
+1. [vercel.com](https://vercel.com) → project **cst-app** → **Settings** → **Environment Variables**
+2. **Add New**:
+   - **Key:** `NEXT_PUBLIC_APP_URL`
+   - **Value:** `https://cst-app-lake.vercel.app`
+   - **Environments:** check **Production**, **Preview**, and **Development**
+3. **Save** → **Deployments** → latest → **⋯** → **Redeploy** (so the new var is picked up)
+
+If you add a custom domain later, update this value to that domain.
+
+### Local dev
+
+In `.env.local`:
+
+```
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+### Already on Vercel?
+
+You do **not** need this for sign-in itself — only for **Admin → Invite by email**. Without it, the app falls back to `VERCEL_URL` on deploys, which can differ per preview deployment.
+
+---
+
 ## Staff emails (seed after login works)
 
 | Role | Email |
@@ -88,4 +117,4 @@ This happens when Framework Preset is **Other** and Output Directory is **`publi
 | Super admin + coach (dev) | jeanemm@hotmail.ca |
 | Coach | jeanyao5787@gmail.com |
 
-Assign roles in Clerk → Users → Public metadata, or via in-app Team settings (Sprint 2).
+Assign additional super admins, coaches, and parents from in-app **Admin** (`/admin`). Bootstrap emails above get roles on first sign-in automatically.

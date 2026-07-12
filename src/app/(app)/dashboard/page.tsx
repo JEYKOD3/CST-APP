@@ -64,12 +64,12 @@ export default async function DashboardPage() {
 
         {canManageTeam(user.roles) && (
           <Link
-            href="/team"
+            href="/admin"
             className="block rounded-xl border border-zinc-800 bg-zinc-900 p-4"
           >
-            <h2 className="mb-1 font-semibold">Team</h2>
+            <h2 className="mb-1 font-semibold">Admin</h2>
             <p className="text-sm text-zinc-400">
-              Add or remove coaches and admins — staff cannot also be parents.
+              Invite coaches, manage roles, edit accounts, and add players.
             </p>
           </Link>
         )}

@@ -8,7 +8,7 @@ const inputClass =
   "w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100";
 
 const ROLE_HINT =
-  "Staff, parent, and teen player are separate account types — assigning one removes the others.";
+  "For accounts that already exist — choose super admin, coach, admin, parent, or player.";
 
 export function AssignRoleForm() {
   const [state, action, pending] = useActionState(
@@ -20,8 +20,11 @@ export function AssignRoleForm() {
   );
 
   return (
-    <form action={action} className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-      <h2 className="font-semibold">Add role</h2>
+    <form
+      action={action}
+      className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-900 p-4"
+    >
+      <h2 className="font-semibold">Assign role to existing account</h2>
       <p className="text-xs text-zinc-500">{ROLE_HINT}</p>
       <input
         name="email"
@@ -37,8 +40,9 @@ export function AssignRoleForm() {
           </option>
         ))}
       </select>
-      {state?.error && (
-        <p className="text-sm text-red-400">{state.error}</p>
+      {state?.error && <p className="text-sm text-red-400">{state.error}</p>}
+      {state?.ok && (
+        <p className="text-sm text-[#8BC34A]">Role assigned.</p>
       )}
       <button
         type="submit"

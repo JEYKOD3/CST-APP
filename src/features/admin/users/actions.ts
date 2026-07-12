@@ -14,7 +14,7 @@ import {
   PLAYER_LEVELS,
   type PlayerLevel,
 } from "@/lib/roles";
-import { assignRolesToUser } from "./role-utils";
+import { assignRolesToUser, userHasRole } from "./role-utils";
 import { countSuperAdmins } from "./queries";
 
 export async function assignRole(formData: FormData) {
@@ -42,6 +42,10 @@ export async function assignRole(formData: FormData) {
       error:
         "No account yet — use Invite above to pre-assign their role and send email.",
     };
+  }
+
+  if (await userHasRole(target.id, role)) {
+    return { error: "This account already has that role." };
   }
 
   await assignRolesToUser(target.id, [role]);

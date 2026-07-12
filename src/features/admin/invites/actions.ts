@@ -11,7 +11,7 @@ import {
   type AppRole,
   canManageTeam,
 } from "@/lib/roles";
-import { assignRolesToUser } from "@/features/admin/users/role-utils";
+import { assignRolesToUser, userHasRole } from "@/features/admin/users/role-utils";
 
 import { fulfillPendingRoles } from "./queries";
 
@@ -53,13 +53,15 @@ export async function inviteUser(formData: FormData) {
     )
     .limit(1);
 
-  if (!existingPending) {
-    await db.insert(pendingRoleAssignments).values({
-      email,
-      role,
-      invitedByUserId: actor.id,
-    });
+  if (existingPending) {
+    return { error: "A pending invite for that email and role already exists." };
   }
+
+  await db.insert(pendingRoleAssignments).values({
+    email,
+    role,
+    invitedByUserId: actor.id,
+  });
 
   const [existingUser] = await db
     .select()
@@ -68,6 +70,19 @@ export async function inviteUser(formData: FormData) {
     .limit(1);
 
   if (existingUser) {
+    if (await userHasRole(existingUser.id, role)) {
+      await db
+        .delete(pendingRoleAssignments)
+        .where(
+          and(
+            eq(pendingRoleAssignments.email, email),
+            eq(pendingRoleAssignments.role, role),
+            isNull(pendingRoleAssignments.fulfilledAt),
+          ),
+        );
+      return { error: "This account already has that role." };
+    }
+
     await assignRolesToUser(existingUser.id, [role]);
     await fulfillPendingRoles(email);
     revalidatePath("/admin");

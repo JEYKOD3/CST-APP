@@ -4,6 +4,7 @@ import {
   pgTable,
   text,
   timestamp,
+  unique,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -59,14 +60,18 @@ export const appUsers = pgTable("app_users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const userRoles = pgTable("user_roles", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => appUsers.id, { onDelete: "cascade" }),
-  role: appRoleEnum("role").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const userRoles = pgTable(
+  "user_roles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUsers.id, { onDelete: "cascade" }),
+    role: appRoleEnum("role").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [unique("user_roles_user_id_role_unique").on(table.userId, table.role)],
+);
 
 /** Pre-assigned roles before first sign-in (super admin invites). */
 export const pendingRoleAssignments = pgTable("pending_role_assignments", {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ensureAppUser } from "@/lib/auth";
-import { canManageTeam, formatRole, isStaffRole } from "@/lib/roles";
+import { canAccessAdminHub, formatRole, isStaffRole } from "@/lib/roles";
 
 export default async function DashboardPage() {
   const user = await ensureAppUser();
@@ -47,17 +47,18 @@ export default async function DashboardPage() {
           </Link>
         )}
 
-        {canManageTeam(user.roles) && (
+        {canAccessAdminHub(user.roles) && (
           <Link
-            href="/team"
+            href="/admin"
             className="block rounded-xl border border-zinc-800 bg-zinc-900 p-4"
           >
-            <h2 className="mb-1 font-semibold">Team</h2>
+            <h2 className="mb-1 font-semibold text-[#8BC34A]">Admin</h2>
             <p className="text-sm text-zinc-400">
-              Add or remove coaches and admins — availability changes over time.
+              Staff invites and team roles — coaches and admins change over time.
             </p>
           </Link>
         )}
+
       </section>
     </main>
   );

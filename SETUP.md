@@ -73,4 +73,38 @@ Use branch **`main`** connection string only for **Production** on Vercel later.
 | Super admin (CEO) | m.h.vakili@gmail.com |
 | Coach | jeanyao5787@gmail.com |
 
-Assign roles in Clerk → Users → Public metadata, or via in-app Team settings (Sprint 2).
+Bootstrap roles apply on **first sign-in**. Additional coaches/admins can be invited in-app (see below).
+
+---
+
+## 6. Admin invite flow (Vercel preview test)
+
+Super admins (Ghaida or Mohammad after first login) can invite staff before they create an account.
+
+### One-time: push schema to Neon dev
+
+After merging a PR that changes `src/db/schema.ts`, run locally (or ask an agent):
+
+```bash
+npm run db:push
+```
+
+Uses `DATABASE_URL` from `.env.local` pointing at Neon **`dev`** branch (same as Vercel Preview).
+
+### Test on Vercel preview (phone)
+
+1. Open the **Preview** URL from the PR checks (GitHub → PR → Vercel bot comment or Checks tab).
+2. Sign in as **super admin** (bootstrap email above).
+3. Bottom nav → **Admin** → **Staff invites**.
+4. Enter a test email + role (e.g. `coach`) → **Send invite**.
+5. Confirm the invite appears in the pending list.
+6. Sign out. Sign up / sign in with the **invited email** (use a second Clerk account or incognito).
+7. Dashboard should show the invited role (e.g. coach) alongside parent.
+8. Admin → Staff invites: pending row should be **gone** (applied on login).
+9. Admin → Team roles → try assigning the **same role again** → expect “They already have this role.”
+10. Try sending a **duplicate invite** (same email + role) → expect error before sign-in.
+
+### Duplicate role prevention
+
+- Database: unique index on `(user_id, role)` in `user_roles`.
+- UI: team assign + invite forms return clear errors instead of silent duplicates.

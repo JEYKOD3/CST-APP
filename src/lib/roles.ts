@@ -32,6 +32,16 @@ export function canManageTeam(roles: AppRole[]) {
   return roles.includes("super_admin");
 }
 
+/** Admin hub: team roles + staff invites (super_admin only). */
+export function canAccessAdminHub(roles: AppRole[]) {
+  return canManageTeam(roles);
+}
+
+/** Roles assignable via staff invite (not parent/player). */
+export const STAFF_INVITE_ROLES = APP_ROLES.filter(
+  (r) => r !== "parent" && r !== "player",
+) as Exclude<AppRole, "parent" | "player">[];
+
 export function formatRole(role: AppRole) {
   return role.replace("_", " ");
 }

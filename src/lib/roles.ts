@@ -12,19 +12,14 @@ export const STAFF_ROLES = ["super_admin", "admin", "coach"] as const;
 
 export type RoleGroup = "staff" | "parent" | "player";
 
-export const PLAYER_LEVELS = [
-  "beginner",
-  "intermediate",
-  "advanced",
-  "elite",
-] as const;
+export const PLAYER_LEVELS = ["beginner", "intermediate", "elite"] as const;
 
 export type PlayerLevel = (typeof PLAYER_LEVELS)[number];
 
 /** Initial staff — modifiable later in Team settings. */
 export const STAFF_BOOTSTRAP: Record<string, AppRole[]> = {
   "ghaidaghaniyu.cstbrossard@gmail.com": ["super_admin", "coach"],
-  "m.h.vakili@gmail.com": ["super_admin", "coach"],
+  "m.h.vakili1998@gmail.com": ["super_admin", "coach"],
   "jeanemm@hotmail.ca": ["super_admin", "coach"],
 };
 
@@ -73,6 +68,11 @@ export function isPlayerAccount(roles: AppRole[]) {
 
 export function canManageTeam(roles: AppRole[]) {
   return roles.includes("super_admin");
+}
+
+/** Create/edit seasons, practices, and coach assignments. */
+export function canManageSchedule(roles: AppRole[]) {
+  return roles.includes("super_admin") || roles.includes("admin");
 }
 
 /** Admin hub: team roles + staff invites (super_admin only). */

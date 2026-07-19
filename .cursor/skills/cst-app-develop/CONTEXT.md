@@ -20,7 +20,12 @@ src/
   features/                 # Domain logic — add new code here
     children/               # actions.ts, queries.ts, components/
     team/
-    schedule/
+    schedule/               # legacy read helpers (formatScheduleWhen)
+    calendar/               # seasons, series, events, coach assignment
+    attendance/             # parent confirm + coach finalize
+    registration/           # summer registration + e-transfer proof
+    notifications/          # in-app notifications
+    admin/                  # invites, users, payments
   lib/                      # auth.ts, roles.ts (cross-cutting)
   db/                       # schema.ts, index.ts
 scripts/seed.ts             # Venues, fleet, sample schedule
@@ -31,7 +36,9 @@ public/                     # Served static files (logo, manifest)
 ## Key domain rules
 
 - Roles: `super_admin`, `admin`, `coach`, `parent`, `player` — **not hardcoded** except bootstrap emails in `roles.ts`
-- Player levels: `beginner | intermediate | advanced | elite` (required)
+- Player levels: `beginner | intermediate | elite` (required)
+- Practices live on one synchronized calendar: `seasons` → `practice_series` (weekly rule) → materialized `schedule_events`. Times are wall-clock in `America/Toronto` (see `src/lib/calendar.ts`)
+- Schedule changes / cancellations / coach assignments create in-app `notifications`
 - 4 venues seeded in `scripts/seed.ts`
 - Mohammad + Ghaida: super_admin + coach; help practices **and** privates
 - ~99% players are kids registered by parents

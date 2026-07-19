@@ -24,12 +24,7 @@ describe("roles", () => {
   });
 
   it("defines player levels", () => {
-    expect(PLAYER_LEVELS).toEqual([
-      "beginner",
-      "intermediate",
-      "advanced",
-      "elite",
-    ]);
+    expect(PLAYER_LEVELS).toEqual(["beginner", "intermediate", "elite"]);
   });
 
   it("bootstraps staff emails", () => {

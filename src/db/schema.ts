@@ -1,10 +1,12 @@
 import {
   boolean,
+  index,
   pgEnum,
   pgTable,
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -87,40 +89,54 @@ export const pendingRoleAssignments = pgTable("pending_role_assignments", {
 });
 
 /** Parent account → many children. Teenagers may have own login (player) or stay linked. */
-export const players = pgTable("players", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  parentUserId: uuid("parent_user_id").references(() => appUsers.id, {
-    onDelete: "set null",
-  }),
-  playerUserId: uuid("player_user_id").references(() => appUsers.id, {
-    onDelete: "set null",
-  }),
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(),
-  level: playerLevelEnum("level").notNull(),
-  preferredVenueId: uuid("preferred_venue_id").references(
-    () => practiceVenues.id,
-  ),
-  isTeenSelfManaged: boolean("is_teen_self_managed").default(false).notNull(),
-  active: boolean("active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const players = pgTable(
+  "players",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    parentUserId: uuid("parent_user_id").references(() => appUsers.id, {
+      onDelete: "set null",
+    }),
+    playerUserId: uuid("player_user_id").references(() => appUsers.id, {
+      onDelete: "set null",
+    }),
+    firstName: text("first_name").notNull(),
+    lastName: text("last_name").notNull(),
+    level: playerLevelEnum("level").notNull(),
+    preferredVenueId: uuid("preferred_venue_id").references(
+      () => practiceVenues.id,
+    ),
+    isTeenSelfManaged: boolean("is_teen_self_managed").default(false).notNull(),
+    active: boolean("active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("players_parent_user_id_idx").on(table.parentUserId),
+    index("players_player_user_id_idx").on(table.playerUserId),
+  ],
+);
 
 /** Single source of truth — master schedule */
-export const scheduleEvents = pgTable("schedule_events", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  type: sessionTypeEnum("type").notNull(),
-  title: text("title").notNull(),
-  venueId: uuid("venue_id")
-    .notNull()
-    .references(() => practiceVenues.id),
-  startsAt: timestamp("starts_at").notNull(),
-  endsAt: timestamp("ends_at").notNull(),
-  notes: text("notes"),
-  createdByUserId: uuid("created_by_user_id").references(() => appUsers.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const scheduleEvents = pgTable(
+  "schedule_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    type: sessionTypeEnum("type").notNull(),
+    title: text("title").notNull(),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => practiceVenues.id),
+    startsAt: timestamp("starts_at").notNull(),
+    endsAt: timestamp("ends_at").notNull(),
+    notes: text("notes"),
+    createdByUserId: uuid("created_by_user_id").references(() => appUsers.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("schedule_events_starts_at_idx").on(table.startsAt),
+    index("schedule_events_ends_at_idx").on(table.endsAt),
+  ],
+);
 
 export const scheduleEventCoaches = pgTable("schedule_event_coaches", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -143,22 +159,34 @@ export const scheduleEventPlayers = pgTable("schedule_event_players", {
 });
 
 /** Per-practice roster — who was present (replaces texting lists) */
-export const attendanceRecords = pgTable("attendance_records", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  eventId: uuid("event_id")
-    .notNull()
-    .references(() => scheduleEvents.id, { onDelete: "cascade" }),
-  playerId: uuid("player_id")
-    .notNull()
-    .references(() => players.id),
-  status: attendanceStatusEnum("status").default("pending").notNull(),
-  parentConfirmedAt: timestamp("parent_confirmed_at"),
-  coachFinalizedAt: timestamp("coach_finalized_at"),
-  coachFinalizedByUserId: uuid("coach_finalized_by_user_id").references(
-    () => appUsers.id,
-  ),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const attendanceRecords = pgTable(
+  "attendance_records",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => scheduleEvents.id, { onDelete: "cascade" }),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id),
+    status: attendanceStatusEnum("status").default("pending").notNull(),
+    parentConfirmedAt: timestamp("parent_confirmed_at"),
+    coachFinalizedAt: timestamp("coach_finalized_at"),
+    coachFinalizedByUserId: uuid("coach_finalized_by_user_id").references(
+      () => appUsers.id,
+    ),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    // One record per (practice, player) — enables upsert + fast per-event roster reads.
+    uniqueIndex("attendance_event_player_idx").on(
+      table.eventId,
+      table.playerId,
+    ),
+    // Parent overview: look up a player's records across upcoming events.
+    index("attendance_player_idx").on(table.playerId),
+  ],
+);
 
 export const fleetVehicles = pgTable("fleet_vehicles", {
   id: uuid("id").defaultRandom().primaryKey(),

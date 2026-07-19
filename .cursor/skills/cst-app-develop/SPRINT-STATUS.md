@@ -1,6 +1,6 @@
 # Sprint status (update when completing work)
 
-Last updated: 2026-07-18
+Last updated: 2026-07-19
 
 ## Sprint 1 — Foundation ✅ (merged)
 
@@ -15,7 +15,7 @@ Last updated: 2026-07-18
 
 - [x] Summer registration form + e-transfer reference + optional proof upload
 - [x] Admin payment approval queue (manual approve/reject)
-- [ ] Attendance: parent confirm + coach finalize per practice
+- [x] Attendance: parent confirm + coach finalize per practice (roster built from parent confirmations; indexed for scale)
 - [ ] Admin-scheduled privates on master calendar
 - [ ] Notices publish UI
 
@@ -35,5 +35,56 @@ Last updated: 2026-07-18
 
 - Proof upload needs `BLOB_READ_WRITE_TOKEN` on Vercel (optional — reference-only works without it)
 - Registration amounts / auto-approve rules not set — manual review only
-- Production `DATABASE_URL` on Vercel uses Neon dev for preview
 - Attendance page is placeholder until Sprint 2 item 3
+
+---
+
+# 🚀 Production launch checklist
+
+**Do this full check-up before opening the app to real parents/coaches.**
+Today the app runs fine on preview + local (Neon `dev` branch, Clerk test keys). The items below are what separates "works for us in testing" from "safe for real users".
+
+## 1. Clerk — switch to a production instance ⚠️ REQUIRED
+
+Currently prod uses **test keys** (`pk_test_...`, instance `settled-ox-29.clerk.accounts.dev`). Dev instances cap at ~100 users, show a dev banner, and use shared OAuth creds — not for real users.
+
+- [ ] Create a **Production instance** in the Clerk dashboard
+- [ ] Pick a domain for Clerk (e.g. `clerk.<ourdomain>`) and add the **DNS records** Clerk provides
+- [ ] Copy the new **`pk_live_...`** and **`sk_live_...`** keys
+- [ ] Update Vercel **Production** env (leave preview/dev on test keys):
+  - `vercel env rm NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY production` then `add` → `pk_live_...`
+  - `vercel env rm CLERK_SECRET_KEY production` then `add` → `sk_live_...`
+- [ ] Configure OAuth redirect URLs / allowed origins for the prod domain in Clerk
+- [ ] Confirm staff bootstrap emails still sign in with the `super_admin + coach` role on the live instance
+
+## 2. Database — Neon `main` branch ✅ DONE (2026-07-19)
+
+- [x] Full schema pushed to Neon `main` (prod) — all 12 tables incl. `registrations`, `pending_role_assignments`
+- [x] Base data seeded (4 venues, 2 fleet vehicles)
+- [ ] Re-run `db:push` against `main` after any future schema change (prod migrations are NOT automatic)
+  - Pending on `main`: attendance indexes added 2026-07-19 (`attendance_event_player_idx`, `attendance_player_idx`, `players_*_idx`, `schedule_events_*_idx`) — already on `dev`
+- [ ] (Optional) Drop the unused `staff_invites` table left over from the merged admin-hub PR
+
+## 3. Domain & deployment
+
+- [ ] Buy / connect a custom domain in Vercel (replaces `cst-app-lake.vercel.app`)
+- [ ] Set `NEXT_PUBLIC_APP_URL` (Production) to the real domain
+- [ ] Verify the Clerk domain + app domain match
+- [ ] Do a real production deploy and smoke-test sign-in on the live domain
+
+## 4. Storage — Vercel Blob
+
+- [ ] Confirm `BLOB_READ_WRITE_TOKEN` is set on Production
+- [ ] Upload + view a real payment proof end-to-end in prod (private access via `/api/registrations/[id]/proof`)
+
+## 5. Data & access sanity
+
+- [ ] Confirm `jeanyao5787@gmail.com` (and any tester) land as **parent** in prod
+- [ ] Confirm the last-super-admin safeguard works (can't remove the final super admin)
+- [ ] Seed / invite the real staff (Ghaida, Mohammad, Yao) and verify their roles
+
+## 6. Pre-flight
+
+- [ ] `npm run verify` green on the release branch
+- [ ] Registration amounts / e-transfer instructions finalized and shown to parents
+- [ ] Decide French/English copy is correct on parent-facing pages

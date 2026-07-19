@@ -23,6 +23,7 @@ export default async function AppLayout({
     ...(isParentAccount(user.roles)
       ? [
           { href: "/children", label: "Kids" },
+          { href: "/attendance", label: "Attend" },
           { href: "/register", label: "Register" },
         ]
       : []),

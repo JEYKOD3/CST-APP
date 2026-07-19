@@ -53,6 +53,15 @@ export default async function DashboardPage() {
               </p>
             </Link>
             <Link
+              href="/attendance"
+              className="block rounded-xl border border-zinc-800 bg-zinc-900 p-4"
+            >
+              <h2 className="mb-1 font-semibold">Practice attendance</h2>
+              <p className="text-sm text-zinc-400">
+                Confirm ahead which practices your kids will attend.
+              </p>
+            </Link>
+            <Link
               href="/register"
               className="block rounded-xl border border-zinc-800 bg-zinc-900 p-4"
             >

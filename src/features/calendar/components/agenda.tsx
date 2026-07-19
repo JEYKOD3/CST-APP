@@ -80,7 +80,10 @@ export function Agenda({
                   <LevelBadge level={event.level} />
                 </div>
                 <p className="mt-1 text-xs text-zinc-400">
-                  {event.venueName} · {event.region}
+                  {event.venueName}
+                  {event.region && event.region !== event.venueName
+                    ? ` · ${event.region}`
+                    : ""}
                 </p>
                 {showCoaches && (
                   <p className="mt-1 text-xs text-zinc-500">

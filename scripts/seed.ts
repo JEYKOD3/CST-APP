@@ -20,15 +20,15 @@ const VENUES = [
     requiresCar: false,
   },
   {
-    name: "Islamic Community Center",
+    name: "Brossard",
     address: "5905 Grande Allée, Brossard, QC J4Z 3R5",
     region: "Brossard",
     requiresCar: true,
   },
   {
-    name: "Ali Ibn Abi Talib School",
+    name: "Saint-Laurent",
     address: "1610 Rue de Beauharnois O, Montréal, QC H4N 1J5",
-    region: "St-Laurent",
+    region: "Saint-Laurent",
     requiresCar: true,
   },
 ] as const;
@@ -48,7 +48,7 @@ async function seed() {
       .from(schema.scheduleEvents);
 
     if (eventCount.count === 0 && venues.length > 0) {
-      const atwater = venues.find((v) => v.region === "Atwater") ?? venues[0];
+      const atwater = venues.find((v) => v.region === "Westmount") ?? venues[0];
       const brossard = venues.find((v) => v.region === "Brossard") ?? venues[0];
       const start = new Date();
       start.setHours(9, 0, 0, 0);

@@ -79,7 +79,10 @@ export default async function ScheduleEventPage({
           {formatTimeRange(event.startsAt, event.endsAt)}
         </p>
         <p className="text-zinc-400">
-          {event.venueName} · {event.region}
+          {event.venueName}
+          {event.region && event.region !== event.venueName
+            ? ` · ${event.region}`
+            : ""}
         </p>
         {event.notes && <p className="pt-1 text-zinc-500">{event.notes}</p>}
       </div>

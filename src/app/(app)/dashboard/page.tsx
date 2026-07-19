@@ -8,15 +8,30 @@ import {
   isStaffAccount,
 } from "@/lib/roles";
 import { canReviewRegistrations } from "@/lib/registration";
+import { listNotifications } from "@/features/notifications/queries";
 
 export default async function DashboardPage() {
   const user = await ensureAppUser();
   const greeting = user.displayName ?? user.email.split("@")[0];
+  const recent = await listNotifications(user.id, 5);
+  const unread = recent.filter((n) => n.readAt === null);
 
   return (
     <main>
       <h1 className="mb-1 text-xl font-bold">Hi, {greeting}</h1>
       <p className="mb-6 text-sm text-zinc-400">{formatRoleGroup(user.roles)}</p>
+
+      {unread.length > 0 && (
+        <Link
+          href="/notifications"
+          className="mb-4 block rounded-xl border border-[#8BC34A]/30 bg-[#8BC34A]/5 p-4"
+        >
+          <p className="mb-1 text-sm font-semibold text-[#8BC34A]">
+            {unread.length} new update{unread.length > 1 ? "s" : ""}
+          </p>
+          <p className="truncate text-xs text-zinc-300">{unread[0].title}</p>
+        </Link>
+      )}
 
       <section className="space-y-3">
         <Link

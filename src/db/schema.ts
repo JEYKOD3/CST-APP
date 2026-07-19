@@ -1,6 +1,7 @@
 import {
   boolean,
   index,
+  integer,
   pgEnum,
   pgTable,
   text,
@@ -13,7 +14,6 @@ import {
 export const playerLevelEnum = pgEnum("player_level", [
   "beginner",
   "intermediate",
-  "advanced",
   "elite",
 ]);
 
@@ -115,7 +115,57 @@ export const players = pgTable(
   ],
 );
 
-/** Single source of truth — master schedule */
+/** A multi-month period (e.g. Summer 2026) that groups recurring practices. */
+export const seasons = pgTable("seasons", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  active: boolean("active").default(true).notNull(),
+  createdByUserId: uuid("created_by_user_id").references(() => appUsers.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+/**
+ * Recurrence rule: a weekly practice slot for a season (venue + level + weekday
+ * + wall-clock time). Concrete dated occurrences are materialized into
+ * `schedule_events`, each linked back via `seriesId`.
+ */
+export const practiceSeries = pgTable(
+  "practice_series",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    seasonId: uuid("season_id")
+      .notNull()
+      .references(() => seasons.id, { onDelete: "cascade" }),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => practiceVenues.id),
+    type: sessionTypeEnum("type").default("class").notNull(),
+    level: playerLevelEnum("level"), // null = all levels
+    title: text("title").notNull(),
+    dayOfWeek: integer("day_of_week").notNull(), // 0=Sunday .. 6=Saturday
+    startTime: text("start_time").notNull(), // "HH:MM" wall-clock at the venue
+    endTime: text("end_time").notNull(),
+    startDate: timestamp("start_date").notNull(),
+    endDate: timestamp("end_date").notNull(),
+    notes: text("notes"),
+    active: boolean("active").default(true).notNull(),
+    createdByUserId: uuid("created_by_user_id").references(() => appUsers.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("practice_series_season_idx").on(table.seasonId),
+    index("practice_series_venue_idx").on(table.venueId),
+  ],
+);
+
+/** Single source of truth — master schedule (concrete dated practices). */
 export const scheduleEvents = pgTable(
   "schedule_events",
   {
@@ -125,8 +175,13 @@ export const scheduleEvents = pgTable(
     venueId: uuid("venue_id")
       .notNull()
       .references(() => practiceVenues.id),
+    level: playerLevelEnum("level"), // null = all levels
+    seriesId: uuid("series_id").references(() => practiceSeries.id, {
+      onDelete: "set null",
+    }),
     startsAt: timestamp("starts_at").notNull(),
     endsAt: timestamp("ends_at").notNull(),
+    canceled: boolean("canceled").default(false).notNull(),
     notes: text("notes"),
     createdByUserId: uuid("created_by_user_id").references(() => appUsers.id),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -135,6 +190,8 @@ export const scheduleEvents = pgTable(
   (table) => [
     index("schedule_events_starts_at_idx").on(table.startsAt),
     index("schedule_events_ends_at_idx").on(table.endsAt),
+    index("schedule_events_series_idx").on(table.seriesId),
+    index("schedule_events_venue_starts_idx").on(table.venueId, table.startsAt),
   ],
 );
 
@@ -207,6 +264,38 @@ export const notices = pgTable("notices", {
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const notificationTypeEnum = pgEnum("notification_type", [
+  "practice_created",
+  "practice_updated",
+  "practice_canceled",
+  "coach_assigned",
+  "general",
+]);
+
+/** In-app notifications — schedule changes, coach assignments (replaces texts). */
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUsers.id, { onDelete: "cascade" }),
+    type: notificationTypeEnum("type").default("general").notNull(),
+    title: text("title").notNull(),
+    body: text("body"),
+    relatedEventId: uuid("related_event_id").references(
+      () => scheduleEvents.id,
+      { onDelete: "cascade" },
+    ),
+    readAt: timestamp("read_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("notifications_user_created_idx").on(table.userId, table.createdAt),
+    index("notifications_user_unread_idx").on(table.userId, table.readAt),
+  ],
+);
 
 export const registrationStatusEnum = pgEnum("registration_status", [
   "pending_review",

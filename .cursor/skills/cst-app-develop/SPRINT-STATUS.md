@@ -16,6 +16,15 @@ Last updated: 2026-07-19
 - [x] Summer registration form + e-transfer reference + optional proof upload
 - [x] Admin payment approval queue (manual approve/reject)
 - [x] Attendance: parent confirm + coach finalize per practice (roster built from parent confirmations; indexed for scale)
+- [x] Player levels reduced to beginner / intermediate / elite (removed `advanced`)
+- [x] Synchronized calendar (agenda, role-aware, level/venue filters, infinite date range)
+  - [x] Seasons + recurring practice series → materialized dated `schedule_events`
+  - [x] Admin: create season, generate recurring practices per venue/level/weekday, add one-off, edit/cancel, assign coaches
+  - [x] Coach view: assigned coaches + available charged car (fleet)
+  - [x] In-app notifications on schedule change / cancel / coach assignment (dashboard + header badge + /notifications)
+- [ ] Private lessons on the calendar (next)
+- [ ] Web push notifications (currently in-app only)
+- [ ] Per-venue distinct schedules beyond Ali (data entry via Manage UI)
 - [ ] Admin-scheduled privates on master calendar
 - [ ] Notices publish UI
 
@@ -63,6 +72,8 @@ Currently prod uses **test keys** (`pk_test_...`, instance `settled-ox-29.clerk.
 - [x] Base data seeded (4 venues, 2 fleet vehicles)
 - [ ] Re-run `db:push` against `main` after any future schema change (prod migrations are NOT automatic)
   - Pending on `main`: attendance indexes added 2026-07-19 (`attendance_event_player_idx`, `attendance_player_idx`, `players_*_idx`, `schedule_events_*_idx`) — already on `dev`
+  - Pending on `main`: calendar schema (`seasons`, `practice_series`, `notifications` tables; `schedule_events.level/series_id/canceled`; `notification_type` enum) — already on `dev`
+  - Pending on `main`: `player_level` enum reduced to beginner/intermediate/elite. Prod `main` is empty so a fresh `db:push` creates the 3-value enum directly (no recreate dance needed).
 - [ ] (Optional) Drop the unused `staff_invites` table left over from the merged admin-hub PR
 
 ## 3. Domain & deployment

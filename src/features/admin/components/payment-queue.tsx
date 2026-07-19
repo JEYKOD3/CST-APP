@@ -48,7 +48,7 @@ export function PaymentQueue({
               )}
               {row.proofUrl ? (
                 <Link
-                  href={row.proofUrl}
+                  href={`/api/registrations/${row.id}/proof`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-2 inline-block text-xs text-[#8BC34A] underline"

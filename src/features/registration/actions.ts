@@ -18,7 +18,7 @@ import { getOpenRegistrationForPlayer } from "./queries";
 async function uploadProof(
   file: File,
   registrationId: string,
-): Promise<{ url: string; fileName: string } | { error: string }> {
+): Promise<{ pathname: string; fileName: string } | { error: string }> {
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return {
       error:
@@ -34,17 +34,19 @@ async function uploadProof(
     return { error: "Proof file must be 4 MB or smaller." } as const;
   }
 
+  // Private access: payment proofs are sensitive and served only to admins
+  // through the authenticated /api/registrations/[id]/proof route.
   const blob = await put(
     `registrations/${registrationId}/${file.name}`,
     file,
-    { access: "public", addRandomSuffix: true },
+    { access: "private", addRandomSuffix: true },
   );
 
-  if (!blob.url) {
+  if (!blob.pathname) {
     return { error: "Upload failed — try again or submit reference only." };
   }
 
-  return { url: blob.url, fileName: file.name };
+  return { pathname: blob.pathname, fileName: file.name };
 }
 
 export async function submitRegistration(formData: FormData) {
@@ -101,21 +103,21 @@ export async function submitRegistration(formData: FormData) {
     })
     .returning();
 
-  let proofUrl: string | null = null;
+  let proofPathname: string | null = null;
   let proofFileName: string | null = null;
 
   if (proof instanceof File && proof.size > 0) {
     const uploaded = await uploadProof(proof, registration.id);
-    if ("url" in uploaded) {
-      proofUrl = uploaded.url;
+    if ("pathname" in uploaded) {
+      proofPathname = uploaded.pathname;
       proofFileName = uploaded.fileName;
     }
   }
 
-  if (proofUrl) {
+  if (proofPathname) {
     await db
       .update(registrations)
-      .set({ proofUrl, proofFileName, updatedAt: new Date() })
+      .set({ proofUrl: proofPathname, proofFileName, updatedAt: new Date() })
       .where(eq(registrations.id, registration.id));
   }
 
@@ -123,13 +125,13 @@ export async function submitRegistration(formData: FormData) {
   revalidatePath("/admin");
 
   const proofFailed =
-    proof instanceof File && proof.size > 0 && !proofUrl;
+    proof instanceof File && proof.size > 0 && !proofPathname;
 
   return {
     ok: true,
     message: proofFailed
       ? "Registration submitted with e-transfer reference. Proof photo could not be uploaded — CST will follow up if needed."
-      : proofUrl
+      : proofPathname
         ? "Registration submitted with payment proof. CST will review it soon."
         : "Registration submitted. CST will review your e-transfer reference.",
   };

@@ -41,7 +41,6 @@ export function RegistrationForm({ childOptions }: { childOptions: ChildOption[]
   return (
     <form
       action={action}
-      encType="multipart/form-data"
       className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-900 p-4"
     >
       <h2 className="font-semibold">{CURRENT_REGISTRATION_LABEL} registration</h2>

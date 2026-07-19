@@ -47,6 +47,16 @@ export async function getOpenRegistrationForPlayer(
   return row ?? null;
 }
 
+export async function getRegistrationById(registrationId: string) {
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(registrations)
+    .where(eq(registrations.id, registrationId))
+    .limit(1);
+  return row ?? null;
+}
+
 export async function listPendingRegistrations() {
   const db = getDb();
   return db

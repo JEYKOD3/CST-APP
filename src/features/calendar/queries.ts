@@ -26,6 +26,7 @@ export type AgendaEvent = {
   venueId: string;
   venueName: string;
   region: string;
+  address: string;
   coaches: AgendaCoach[];
 };
 
@@ -66,6 +67,7 @@ export async function getAgenda(filters: AgendaFilters): Promise<AgendaEvent[]> 
       venueId: scheduleEvents.venueId,
       venueName: practiceVenues.name,
       region: practiceVenues.region,
+      address: practiceVenues.address,
     })
     .from(scheduleEvents)
     .innerJoin(practiceVenues, eq(practiceVenues.id, scheduleEvents.venueId))
@@ -116,6 +118,7 @@ export async function getEventDetail(eventId: string) {
       venueId: scheduleEvents.venueId,
       venueName: practiceVenues.name,
       region: practiceVenues.region,
+      address: practiceVenues.address,
       requiresCar: practiceVenues.requiresCar,
       seriesId: scheduleEvents.seriesId,
     })

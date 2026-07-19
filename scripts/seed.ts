@@ -9,25 +9,25 @@ import * as schema from "../src/db/schema";
 const VENUES = [
   {
     name: "Club Atwater",
-    address: "3505 Atwater Ave, Montreal, QC H3H 1Y2",
+    address: "3505 Avenue Atwater, Montréal, QC",
     region: "Westmount",
     requiresCar: false,
   },
   {
     name: "Sacred Heart School",
-    address: "3635 Atwater Ave, Montreal, QC H3H 1Y4",
+    address: "3635 Atwater Ave, Montréal, QC",
     region: "Westmount",
     requiresCar: false,
   },
   {
     name: "Brossard",
-    address: "5905 Grande Allée, Brossard, QC J4Z 3R5",
+    address: "5905 Grande Allée, Brossard, QC",
     region: "Brossard",
     requiresCar: true,
   },
   {
     name: "Saint-Laurent",
-    address: "1610 Rue de Beauharnois O, Montréal, QC H4N 1J5",
+    address: "1610 Rue de Beauharnois Ouest, Montréal, QC",
     region: "Saint-Laurent",
     requiresCar: true,
   },

@@ -23,6 +23,7 @@ import {
   formatTimeRange,
   zonedTimeInput,
 } from "@/lib/calendar";
+import { mapsHref } from "@/lib/maps";
 
 export default async function ScheduleEventPage({
   params,
@@ -78,12 +79,30 @@ export default async function ScheduleEventPage({
         <p className="text-zinc-200">
           {formatTimeRange(event.startsAt, event.endsAt)}
         </p>
-        <p className="text-zinc-400">
-          {event.venueName}
-          {event.region && event.region !== event.venueName
-            ? ` · ${event.region}`
-            : ""}
-        </p>
+        <a
+          href={mapsHref(event.address)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-[#8BC34A]"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="h-4 w-4 shrink-0"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" />
+          </svg>
+          <span>
+            {event.venueName}
+            {event.region && event.region !== event.venueName
+              ? ` · ${event.region}`
+              : ""}
+            <span className="block text-xs text-zinc-500">
+              {event.address} — tap for directions
+            </span>
+          </span>
+        </a>
         {event.notes && <p className="pt-1 text-zinc-500">{event.notes}</p>}
       </div>
 

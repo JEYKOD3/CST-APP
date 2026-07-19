@@ -7,6 +7,7 @@ import {
   isPlayerAccount,
   isStaffAccount,
 } from "@/lib/roles";
+import { canReviewRegistrations } from "@/lib/registration";
 
 export default async function DashboardPage() {
   const user = await ensureAppUser();
@@ -41,15 +42,28 @@ export default async function DashboardPage() {
         )}
 
         {isParentAccount(user.roles) && (
-          <Link
-            href="/children"
-            className="block rounded-xl border border-zinc-800 bg-zinc-900 p-4"
-          >
-            <h2 className="mb-1 font-semibold">My children</h2>
-            <p className="text-sm text-zinc-400">
-              Add all your kids under one parent account.
-            </p>
-          </Link>
+          <>
+            <Link
+              href="/children"
+              className="block rounded-xl border border-zinc-800 bg-zinc-900 p-4"
+            >
+              <h2 className="mb-1 font-semibold">My children</h2>
+              <p className="text-sm text-zinc-400">
+                Add all your kids under one parent account.
+              </p>
+            </Link>
+            <Link
+              href="/register"
+              className="block rounded-xl border border-zinc-800 bg-zinc-900 p-4"
+            >
+              <h2 className="mb-1 font-semibold text-[#8BC34A]">
+                Summer registration
+              </h2>
+              <p className="text-sm text-zinc-400">
+                Submit e-transfer proof for Summer 2026 — CST approves manually.
+              </p>
+            </Link>
+          </>
         )}
 
         {isPlayerAccount(user.roles) && (
@@ -62,6 +76,18 @@ export default async function DashboardPage() {
           </div>
         )}
 
+        {canReviewRegistrations(user.roles) && !canManageTeam(user.roles) && (
+          <Link
+            href="/payments"
+            className="block rounded-xl border border-zinc-800 bg-zinc-900 p-4"
+          >
+            <h2 className="mb-1 font-semibold">Payment queue</h2>
+            <p className="text-sm text-zinc-400">
+              Review summer registrations and e-transfer proof.
+            </p>
+          </Link>
+        )}
+
         {canManageTeam(user.roles) && (
           <Link
             href="/admin"
@@ -69,7 +95,7 @@ export default async function DashboardPage() {
           >
             <h2 className="mb-1 font-semibold">Admin</h2>
             <p className="text-sm text-zinc-400">
-              Invite coaches, manage roles, edit accounts, and add players.
+              Invite coaches, manage roles, review payments, and add players.
             </p>
           </Link>
         )}

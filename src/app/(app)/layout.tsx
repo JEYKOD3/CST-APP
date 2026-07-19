@@ -8,6 +8,7 @@ import {
   isParentAccount,
   isStaffAccount,
 } from "@/lib/roles";
+import { canReviewRegistrations } from "@/lib/registration";
 
 export default async function AppLayout({
   children,
@@ -19,11 +20,18 @@ export default async function AppLayout({
   const navItems = [
     { href: "/dashboard", label: "Home" },
     { href: "/schedule", label: "Schedule" },
+    ...(isParentAccount(user.roles)
+      ? [
+          { href: "/children", label: "Kids" },
+          { href: "/register", label: "Register" },
+        ]
+      : []),
     ...(isStaffAccount(user.roles)
       ? [{ href: "/attendance", label: "Attendance" }]
-      : isParentAccount(user.roles)
-        ? [{ href: "/children", label: "Kids" }]
-        : []),
+      : []),
+    ...(canReviewRegistrations(user.roles) && !canManageTeam(user.roles)
+      ? [{ href: "/payments", label: "Payments" }]
+      : []),
     ...(canManageTeam(user.roles)
       ? [{ href: "/admin", label: "Admin" }]
       : []),

@@ -179,3 +179,33 @@ export const notices = pgTable("notices", {
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const registrationStatusEnum = pgEnum("registration_status", [
+  "pending_review",
+  "approved",
+  "rejected",
+]);
+
+/** Summer registration + e-transfer proof — manual admin approval (Sprint 2). */
+export const registrations = pgTable("registrations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  playerId: uuid("player_id")
+    .notNull()
+    .references(() => players.id),
+  parentUserId: uuid("parent_user_id")
+    .notNull()
+    .references(() => appUsers.id),
+  season: text("season").notNull(),
+  status: registrationStatusEnum("status").default("pending_review").notNull(),
+  eTransferReference: text("e_transfer_reference").notNull(),
+  proofUrl: text("proof_url"),
+  proofFileName: text("proof_file_name"),
+  parentNotes: text("parent_notes"),
+  reviewedByUserId: uuid("reviewed_by_user_id").references(() => appUsers.id, {
+    onDelete: "set null",
+  }),
+  reviewedAt: timestamp("reviewed_at"),
+  adminNotes: text("admin_notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

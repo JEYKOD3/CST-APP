@@ -3,8 +3,10 @@ import { ensureAppUser } from "@/lib/auth";
 import { canManageTeam, formatRole, formatRoleGroup } from "@/lib/roles";
 import { cancelPendingInvite } from "@/features/admin/invites/actions";
 import { listPendingInvites } from "@/features/admin/invites/queries";
+import { PaymentQueue } from "@/features/admin/components/payment-queue";
 import { removeRole } from "@/features/admin/users/actions";
 import { listAllUsers } from "@/features/admin/users/queries";
+import { listPendingRegistrations } from "@/features/registration/queries";
 import { AdminAddPlayerForm } from "@/features/admin/components/admin-add-player-form";
 import { AssignRoleForm } from "@/features/admin/components/assign-role-form";
 import { EditUserNameForm } from "@/features/admin/components/edit-user-name-form";
@@ -14,9 +16,10 @@ export default async function AdminPage() {
   const user = await ensureAppUser();
   if (!canManageTeam(user.roles)) redirect("/dashboard");
 
-  const [pendingInvites, allUsers] = await Promise.all([
+  const [pendingInvites, allUsers, pendingRegistrations] = await Promise.all([
     listPendingInvites(),
     listAllUsers(),
+    listPendingRegistrations(),
   ]);
 
   const users = Object.values(allUsers);
@@ -30,6 +33,8 @@ export default async function AdminPage() {
           Super admins can promote or demote other super admins from here.
         </p>
       </div>
+
+      <PaymentQueue pending={pendingRegistrations} />
 
       <InviteUserForm />
 

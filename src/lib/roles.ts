@@ -19,7 +19,7 @@ export type PlayerLevel = (typeof PLAYER_LEVELS)[number];
 /** Initial staff — modifiable later in Team settings. */
 export const STAFF_BOOTSTRAP: Record<string, AppRole[]> = {
   "ghaidaghaniyu.cstbrossard@gmail.com": ["super_admin", "coach"],
-  "m.h.vakili@gmail.com": ["super_admin", "coach"],
+  "m.h.vakili1998@gmail.com": ["super_admin", "coach"],
   "jeanemm@hotmail.ca": ["super_admin", "coach"],
 };
 

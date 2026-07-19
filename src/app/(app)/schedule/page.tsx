@@ -92,7 +92,7 @@ export default async function SchedulePage({
             href={buildHref(sp, { venue: v.id })}
             className={chip(sp.venue === v.id)}
           >
-            {v.region}
+            {v.name}
           </Link>
         ))}
       </div>

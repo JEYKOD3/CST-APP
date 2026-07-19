@@ -10,13 +10,13 @@ const VENUES = [
   {
     name: "Club Atwater",
     address: "3505 Atwater Ave, Montreal, QC H3H 1Y2",
-    region: "Atwater",
+    region: "Westmount",
     requiresCar: false,
   },
   {
     name: "Sacred Heart School",
     address: "3635 Atwater Ave, Montreal, QC H3H 1Y4",
-    region: "Atwater",
+    region: "Westmount",
     requiresCar: false,
   },
   {

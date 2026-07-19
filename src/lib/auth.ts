@@ -3,7 +3,11 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db";
 import { appUsers, userRoles } from "@/db/schema";
-import { applyPendingInvites } from "@/features/invites/apply-invites";
+import {
+  fulfillPendingRoles,
+  getPendingRolesForEmail,
+} from "@/features/admin/invites/queries";
+import { normalizeUserRoles } from "@/lib/role-sync";
 import {
   type AppRole,
   STAFF_BOOTSTRAP,
@@ -17,23 +21,50 @@ export type SessionUser = {
   roles: AppRole[];
 };
 
-async function bootstrapRoles(userId: string, email: string) {
+async function ensureUserRoles(userId: string, email: string) {
   const db = getDb();
   const normalized = email.toLowerCase();
-  const bootstrap = STAFF_BOOTSTRAP[normalized];
-
   const existing = await db
-    .select()
+    .select({ role: userRoles.role })
     .from(userRoles)
     .where(eq(userRoles.userId, userId));
 
-  if (existing.length > 0) return;
+  const pendingRoles = await getPendingRolesForEmail(normalized);
+  const have = new Set(existing.map((r) => r.role as AppRole));
 
-  const rolesToAdd: AppRole[] = bootstrap ?? ["parent"];
+  if (existing.length === 0) {
+    const rolesToAdd: AppRole[] =
+      pendingRoles.length > 0
+        ? pendingRoles
+        : (STAFF_BOOTSTRAP[normalized] ?? ["parent"]);
+    await db.insert(userRoles).values(
+      rolesToAdd.map((role) => ({ userId, role })),
+    );
+    if (pendingRoles.length > 0) {
+      await fulfillPendingRoles(normalized);
+    }
+  } else {
+    const bootstrap = STAFF_BOOTSTRAP[normalized];
+    const toAdd: AppRole[] = [];
 
-  await db.insert(userRoles).values(
-    rolesToAdd.map((role) => ({ userId, role })),
-  );
+    if (bootstrap) {
+      toAdd.push(...bootstrap.filter((role) => !have.has(role)));
+    }
+    for (const role of pendingRoles) {
+      if (!have.has(role)) toAdd.push(role);
+    }
+
+    if (toAdd.length > 0) {
+      await db.insert(userRoles).values(
+        toAdd.map((role) => ({ userId, role })),
+      );
+    }
+    if (pendingRoles.length > 0) {
+      await fulfillPendingRoles(normalized);
+    }
+  }
+
+  await normalizeUserRoles(userId);
 }
 
 export async function ensureAppUser(): Promise<SessionUser> {
@@ -62,8 +93,11 @@ export async function ensureAppUser(): Promise<SessionUser> {
     [user] = await db
       .insert(appUsers)
       .values({ clerkUserId, email, displayName })
+      .onConflictDoUpdate({
+        target: appUsers.clerkUserId,
+        set: { email, displayName },
+      })
       .returning();
-    await bootstrapRoles(user.id, email);
   } else if (displayName && user.displayName !== displayName) {
     [user] = await db
       .update(appUsers)
@@ -72,7 +106,7 @@ export async function ensureAppUser(): Promise<SessionUser> {
       .returning();
   }
 
-  await applyPendingInvites(db, user.id, email);
+  await ensureUserRoles(user.id, email);
 
   const roles = await db
     .select({ role: userRoles.role })

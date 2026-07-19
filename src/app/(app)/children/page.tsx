@@ -1,10 +1,14 @@
+import { redirect } from "next/navigation";
 import { ensureAppUser } from "@/lib/auth";
+import { isParentAccount } from "@/lib/roles";
 import { removeChild } from "@/features/children/actions";
 import { AddChildForm } from "@/features/children/components/add-child-form";
 import { listChildrenForParent } from "@/features/children/queries";
 
 export default async function ChildrenPage() {
   const user = await ensureAppUser();
+  if (!isParentAccount(user.roles)) redirect("/dashboard");
+
   const children = await listChildrenForParent(user.id);
 
   return (

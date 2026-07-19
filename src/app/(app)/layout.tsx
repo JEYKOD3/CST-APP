@@ -3,7 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { ensureAppUser } from "@/lib/auth";
-import { canAccessAdminHub, isStaffRole } from "@/lib/roles";
+import {
+  canManageTeam,
+  isParentAccount,
+  isStaffAccount,
+} from "@/lib/roles";
+import { canReviewRegistrations } from "@/lib/registration";
 
 export default async function AppLayout({
   children,
@@ -15,10 +20,19 @@ export default async function AppLayout({
   const navItems = [
     { href: "/dashboard", label: "Home" },
     { href: "/schedule", label: "Schedule" },
-    ...(user.roles.some(isStaffRole)
+    ...(isParentAccount(user.roles)
+      ? [
+          { href: "/children", label: "Kids" },
+          { href: "/register", label: "Register" },
+        ]
+      : []),
+    ...(isStaffAccount(user.roles)
       ? [{ href: "/attendance", label: "Attendance" }]
-      : [{ href: "/children", label: "Kids" }]),
-    ...(canAccessAdminHub(user.roles)
+      : []),
+    ...(canReviewRegistrations(user.roles) && !canManageTeam(user.roles)
+      ? [{ href: "/payments", label: "Payments" }]
+      : []),
+    ...(canManageTeam(user.roles)
       ? [{ href: "/admin", label: "Admin" }]
       : []),
     { href: "/more", label: "More" },

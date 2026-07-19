@@ -4,7 +4,7 @@ import {
   pgTable,
   text,
   timestamp,
-  uniqueIndex,
+  unique,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -70,27 +70,21 @@ export const userRoles = pgTable(
     role: appRoleEnum("role").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [
-    uniqueIndex("user_roles_user_id_role_idx").on(table.userId, table.role),
-  ],
+  (table) => [unique("user_roles_user_id_role_unique").on(table.userId, table.role)],
 );
 
-/** Pending staff invites — applied when invitee signs in. */
-export const staffInvites = pgTable(
-  "staff_invites",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    email: text("email").notNull(),
-    role: appRoleEnum("role").notNull(),
-    invitedByUserId: uuid("invited_by_user_id").references(() => appUsers.id, {
-      onDelete: "set null",
-    }),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-  },
-  (table) => [
-    uniqueIndex("staff_invites_email_role_idx").on(table.email, table.role),
-  ],
-);
+/** Pre-assigned roles before first sign-in (super admin invites). */
+export const pendingRoleAssignments = pgTable("pending_role_assignments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  email: text("email").notNull(),
+  role: appRoleEnum("role").notNull(),
+  invitedByUserId: uuid("invited_by_user_id").references(() => appUsers.id, {
+    onDelete: "set null",
+  }),
+  clerkInvitationId: text("clerk_invitation_id"),
+  fulfilledAt: timestamp("fulfilled_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 
 /** Parent account → many children. Teenagers may have own login (player) or stay linked. */
 export const players = pgTable("players", {
@@ -184,4 +178,34 @@ export const notices = pgTable("notices", {
   bodyFr: text("body_fr"),
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const registrationStatusEnum = pgEnum("registration_status", [
+  "pending_review",
+  "approved",
+  "rejected",
+]);
+
+/** Summer registration + e-transfer proof — manual admin approval (Sprint 2). */
+export const registrations = pgTable("registrations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  playerId: uuid("player_id")
+    .notNull()
+    .references(() => players.id),
+  parentUserId: uuid("parent_user_id")
+    .notNull()
+    .references(() => appUsers.id),
+  season: text("season").notNull(),
+  status: registrationStatusEnum("status").default("pending_review").notNull(),
+  eTransferReference: text("e_transfer_reference").notNull(),
+  proofUrl: text("proof_url"),
+  proofFileName: text("proof_file_name"),
+  parentNotes: text("parent_notes"),
+  reviewedByUserId: uuid("reviewed_by_user_id").references(() => appUsers.id, {
+    onDelete: "set null",
+  }),
+  reviewedAt: timestamp("reviewed_at"),
+  adminNotes: text("admin_notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

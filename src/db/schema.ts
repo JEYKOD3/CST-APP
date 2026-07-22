@@ -51,6 +51,9 @@ export const practiceVenues = pgTable("practice_venues", {
   address: text("address").notNull(),
   region: text("region").notNull(),
   requiresCar: boolean("requires_car").default(false).notNull(),
+  // Inactive venues (e.g. a court rental we lost) stay for history but are
+  // hidden from new-practice pickers and season attribution.
+  active: boolean("active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -128,6 +131,32 @@ export const seasons = pgTable("seasons", {
   }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+/**
+ * Which venues a season uses. Court-rental accessibility changes per season, so
+ * an admin attributes the available venues to each season; practice generation
+ * is then scoped to these.
+ */
+export const seasonVenues = pgTable(
+  "season_venues",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    seasonId: uuid("season_id")
+      .notNull()
+      .references(() => seasons.id, { onDelete: "cascade" }),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => practiceVenues.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("season_venues_season_venue_idx").on(
+      table.seasonId,
+      table.venueId,
+    ),
+    index("season_venues_season_idx").on(table.seasonId),
+  ],
+);
 
 /**
  * Recurrence rule: a weekly practice slot for a season (venue + level + weekday

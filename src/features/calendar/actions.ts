@@ -11,6 +11,7 @@ import {
   scheduleEventCoaches,
   scheduleEvents,
   seasons,
+  seasonVenues,
 } from "@/db/schema";
 import { ensureAppUser } from "@/lib/auth";
 import {
@@ -77,17 +78,70 @@ export async function createSeason(formData: FormData): Promise<ActionResult> {
     return { error: "End date must be after the start date." };
   }
 
+  const venueIds = formData
+    .getAll("venueIds")
+    .map((v) => String(v))
+    .filter(Boolean);
+
   const db = getDb();
-  await db.insert(seasons).values({
-    name,
-    slug: slugify(name) || `season-${Date.now()}`,
-    startDate: new Date(`${startDate}T00:00:00Z`),
-    endDate: new Date(`${endDate}T00:00:00Z`),
-    createdByUserId: user.id,
-  });
+  const [season] = await db
+    .insert(seasons)
+    .values({
+      name,
+      slug: slugify(name) || `season-${Date.now()}`,
+      startDate: new Date(`${startDate}T00:00:00Z`),
+      endDate: new Date(`${endDate}T00:00:00Z`),
+      createdByUserId: user.id,
+    })
+    .returning({ id: seasons.id });
+
+  if (venueIds.length > 0) {
+    await db
+      .insert(seasonVenues)
+      .values(venueIds.map((venueId) => ({ seasonId: season.id, venueId })));
+  }
 
   revalidatePath("/schedule/manage");
-  return { ok: true, message: `Season "${name}" created.` };
+  return {
+    ok: true,
+    message: `Season "${name}" created${venueIds.length ? ` with ${venueIds.length} venue(s)` : ""}.`,
+  };
+}
+
+/** Replace the set of venues attributed to a season. */
+export async function setSeasonVenues(formData: FormData): Promise<ActionResult> {
+  const user = await ensureAppUser();
+  if (!canManageSchedule(user.roles)) {
+    return { error: "Only admins can change season venues." };
+  }
+
+  const seasonId = String(formData.get("seasonId") ?? "");
+  if (!seasonId) return { error: "Missing season." };
+  const venueIds = formData
+    .getAll("venueIds")
+    .map((v) => String(v))
+    .filter(Boolean);
+
+  const db = getDb();
+  const [season] = await db
+    .select({ id: seasons.id })
+    .from(seasons)
+    .where(eq(seasons.id, seasonId))
+    .limit(1);
+  if (!season) return { error: "Season not found." };
+
+  await db.delete(seasonVenues).where(eq(seasonVenues.seasonId, seasonId));
+  if (venueIds.length > 0) {
+    await db
+      .insert(seasonVenues)
+      .values(venueIds.map((venueId) => ({ seasonId, venueId })));
+  }
+
+  revalidatePath("/schedule/manage");
+  return {
+    ok: true,
+    message: `Season venues updated (${venueIds.length}).`,
+  };
 }
 
 /**
@@ -131,6 +185,23 @@ export async function createSeriesAndGenerate(
     .where(eq(seasons.id, seasonId))
     .limit(1);
   if (!season) return { error: "Season not found." };
+
+  const [attributed] = await db
+    .select({ id: seasonVenues.id })
+    .from(seasonVenues)
+    .where(
+      and(
+        eq(seasonVenues.seasonId, seasonId),
+        eq(seasonVenues.venueId, venueId),
+      ),
+    )
+    .limit(1);
+  if (!attributed) {
+    return {
+      error:
+        "That venue isn't attributed to this season. Add it to the season's venues first.",
+    };
+  }
 
   const startDateStr = season.startDate.toISOString().slice(0, 10);
   const endDateStr = season.endDate.toISOString().slice(0, 10);

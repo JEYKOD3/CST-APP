@@ -8,6 +8,7 @@ import {
   scheduleEventCoaches,
   scheduleEvents,
   seasons,
+  seasonVenues,
   userRoles,
 } from "@/db/schema";
 import type { PlayerLevel } from "@/lib/roles";
@@ -146,6 +147,7 @@ export async function getEventDetail(eventId: string) {
   };
 }
 
+/** Active venues only — used by new-practice pickers and season attribution. */
 export async function listVenues() {
   const db = getDb();
   return db
@@ -156,7 +158,25 @@ export async function listVenues() {
       requiresCar: practiceVenues.requiresCar,
     })
     .from(practiceVenues)
+    .where(eq(practiceVenues.active, true))
     .orderBy(asc(practiceVenues.region), asc(practiceVenues.name));
+}
+
+/** Map of seasonId → attributed venueIds, for scoping the practice generator. */
+export async function getSeasonVenueMap(): Promise<Record<string, string[]>> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      seasonId: seasonVenues.seasonId,
+      venueId: seasonVenues.venueId,
+    })
+    .from(seasonVenues);
+
+  const map: Record<string, string[]> = {};
+  for (const row of rows) {
+    (map[row.seasonId] ??= []).push(row.venueId);
+  }
+  return map;
 }
 
 export async function listSeasons() {

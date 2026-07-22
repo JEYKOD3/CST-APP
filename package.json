@@ -12,6 +12,7 @@
     "verify": "npm run lint && npm run test:run && npm run build",
     "db:push": "drizzle-kit push",
     "db:seed": "npx tsx scripts/seed.ts",
+    "db:seed:brossard": "npx tsx scripts/seed-brossard-hours.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

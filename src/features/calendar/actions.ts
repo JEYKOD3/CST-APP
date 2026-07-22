@@ -21,6 +21,7 @@ import {
 } from "@/lib/calendar";
 import { canManageSchedule, PLAYER_LEVELS, type PlayerLevel } from "@/lib/roles";
 import { notifyUsers } from "@/features/notifications/create";
+import { clubToday, seedBrossardHours } from "@/features/calendar/seed-brossard";
 
 type ActionResult = { ok?: boolean; error?: string; message?: string };
 
@@ -88,6 +89,37 @@ export async function createSeason(formData: FormData): Promise<ActionResult> {
 
   revalidatePath("/schedule/manage");
   return { ok: true, message: `Season "${name}" created.` };
+}
+
+/**
+ * One-tap loader for the fixed Brossard training hours (Summer + Winter).
+ * Runs the shared seeding logic server-side so admins can populate the
+ * calendar from their phone. Idempotent — safe to tap repeatedly.
+ */
+export async function loadBrossardHours(): Promise<ActionResult> {
+  const user = await ensureAppUser();
+  if (!canManageSchedule(user.roles)) {
+    return { error: "Only admins can load the Brossard schedule." };
+  }
+
+  const db = getDb();
+  let result;
+  try {
+    result = await seedBrossardHours(db, clubToday(), { createdByUserId: user.id });
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Could not load Brossard hours.",
+    };
+  }
+
+  revalidatePath("/schedule");
+  revalidatePath("/schedule/manage");
+
+  const message =
+    result.created > 0
+      ? `Added ${result.created} Brossard practices${result.skipped ? `, ${result.skipped} slot(s) already there` : ""}.`
+      : `Brossard hours already loaded — ${result.skipped} slot(s), nothing to add.`;
+  return { ok: true, message };
 }
 
 /**

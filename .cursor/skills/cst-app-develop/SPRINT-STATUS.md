@@ -26,6 +26,8 @@ Last updated: 2026-07-19
 - [ ] Web push notifications (currently in-app only)
 - [x] Brossard training hours seeded (`npm run db:seed:brossard`): Summer to Sep 30 (Mon/Tue/Wed 8–10 PM, Sat 1:30–3:30, Sun 1–3), Winter Sep→Feb (Sun 3:15–5:15)
 - [ ] Per-venue distinct schedules beyond Ali + Brossard (data entry via Manage UI)
+- [x] Ops runner GitHub Action + OPS-AND-AGENTS.md: run seeds/migrations from GitHub mobile (dev free, prod manual-approval gate); Cloud Agent dev DB access via secret + env-setup prompt
+- [ ] In-app bulk season/series editing: change a whole series' weekly time/day and re-materialize future occurrences; discontinue a series from the Manage UI (per-practice reschedule/cancel/move already shipped)
 - [ ] Admin-scheduled privates on master calendar
 - [ ] Notices publish UI
 

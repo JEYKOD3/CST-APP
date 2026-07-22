@@ -20,7 +20,7 @@ const VENUES = [
     requiresCar: false,
   },
   {
-    name: "Brossard",
+    name: "Islamic Community Center",
     address: "5905 Grande Allée, Brossard, QC",
     region: "Brossard",
     requiresCar: true,

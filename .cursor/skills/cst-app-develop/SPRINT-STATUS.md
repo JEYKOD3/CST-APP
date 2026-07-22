@@ -24,7 +24,8 @@ Last updated: 2026-07-19
   - [x] In-app notifications on schedule change / cancel / coach assignment (dashboard + header badge + /notifications)
 - [ ] Private lessons on the calendar (next)
 - [ ] Web push notifications (currently in-app only)
-- [ ] Per-venue distinct schedules beyond Ali (data entry via Manage UI)
+- [x] Brossard training hours seeded (`npm run db:seed:brossard`): Summer to Sep 30 (Mon/Tue/Wed 8–10 PM, Sat 1:30–3:30, Sun 1–3), Winter Sep→Feb (Sun 3:15–5:15)
+- [ ] Per-venue distinct schedules beyond Ali + Brossard (data entry via Manage UI)
 - [ ] Admin-scheduled privates on master calendar
 - [ ] Notices publish UI
 

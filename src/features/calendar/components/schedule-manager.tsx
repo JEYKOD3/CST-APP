@@ -5,7 +5,6 @@ import {
   createSeason,
   createSeriesAndGenerate,
   createSinglePractice,
-  loadBrossardHours,
 } from "@/features/calendar/actions";
 import { PLAYER_LEVELS } from "@/lib/roles";
 
@@ -39,15 +38,21 @@ function Feedback({ state }: { state: Result | null }) {
 export function ScheduleManager({
   venues,
   seasons,
+  seasonVenueIds,
 }: {
   venues: Venue[];
   seasons: Season[];
+  seasonVenueIds: Record<string, string[]>;
 }) {
   const [pending, startTransition] = useTransition();
   const [seasonState, setSeasonState] = useState<Result | null>(null);
   const [seriesState, setSeriesState] = useState<Result | null>(null);
   const [singleState, setSingleState] = useState<Result | null>(null);
-  const [brossardState, setBrossardState] = useState<Result | null>(null);
+  const [seriesSeasonId, setSeriesSeasonId] = useState("");
+
+  const seriesVenues = seriesSeasonId
+    ? venues.filter((v) => (seasonVenueIds[seriesSeasonId] ?? []).includes(v.id))
+    : [];
 
   function submit(
     fd: FormData,
@@ -65,33 +70,6 @@ export function ScheduleManager({
 
   return (
     <div className="space-y-6">
-      {/* One-tap Brossard hours */}
-      <section className="rounded-xl border border-[#8BC34A]/40 bg-zinc-900 p-4">
-        <h2 className="mb-1 font-semibold">Quick load: Brossard hours</h2>
-        <p className="mb-3 text-xs text-zinc-400">
-          Loads the standard Brossard training schedule in one tap — Summer
-          (Mon/Tue/Wed 8–10 PM, Sat 1:30–3:30 PM, Sun 1–3 PM) through Sep 30, and
-          Winter Sundays 3:15–5:15 PM. Safe to tap again; existing slots are
-          skipped.
-        </p>
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => {
-            setBrossardState(null);
-            startTransition(async () => {
-              setBrossardState(await loadBrossardHours());
-            });
-          }}
-          className="rounded-lg bg-[#8BC34A] px-3 py-1.5 text-xs font-semibold text-black disabled:opacity-50"
-        >
-          {pending ? "Loading…" : "Load Brossard hours"}
-        </button>
-        <div className="mt-1">
-          <Feedback state={brossardState} />
-        </div>
-      </section>
-
       {/* Create season */}
       <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
         <h2 className="mb-2 font-semibold">1. Create a season</h2>
@@ -115,6 +93,31 @@ export function ScheduleManager({
               End date
               <input type="date" name="endDate" required className={inputClass} />
             </label>
+          </div>
+          <div>
+            <span className={labelClass}>Venues this season (accessibility)</span>
+            {venues.length === 0 ? (
+              <p className="mt-1 text-xs text-zinc-500">
+                No active venues — add one in Venues first.
+              </p>
+            ) : (
+              <div className="mt-1 flex flex-wrap gap-1.5">
+                {venues.map((v) => (
+                  <label
+                    key={v.id}
+                    className="flex cursor-pointer items-center gap-1 rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-300"
+                  >
+                    <input
+                      type="checkbox"
+                      name="venueIds"
+                      value={v.id}
+                      className="accent-[#8BC34A]"
+                    />
+                    {v.name} ({v.region})
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
           <button
             type="submit"
@@ -142,7 +145,13 @@ export function ScheduleManager({
           >
             <label className={labelClass}>
               Season
-              <select name="seasonId" required className={inputClass} defaultValue="">
+              <select
+                name="seasonId"
+                required
+                className={inputClass}
+                value={seriesSeasonId}
+                onChange={(e) => setSeriesSeasonId(e.target.value)}
+              >
                 <option value="" disabled>
                   Select season
                 </option>
@@ -159,13 +168,19 @@ export function ScheduleManager({
                 <option value="" disabled>
                   Select venue
                 </option>
-                {venues.map((v) => (
+                {seriesVenues.map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.name} ({v.region})
                   </option>
                 ))}
               </select>
             </label>
+            {seriesSeasonId && seriesVenues.length === 0 && (
+              <p className="text-xs text-amber-400">
+                No venues attributed to this season yet. Add venues to it under
+                “Existing seasons” below.
+              </p>
+            )}
             <label className={labelClass}>
               Title
               <input name="title" placeholder="Beginners group" required className={inputClass} />

@@ -3,18 +3,24 @@ import { redirect } from "next/navigation";
 import { ensureAppUser } from "@/lib/auth";
 import { canManageSchedule } from "@/lib/roles";
 import {
+  getSeasonVenueMap,
   listSeasons,
   listSeriesForSeason,
   listVenues,
 } from "@/features/calendar/queries";
 import { ScheduleManager } from "@/features/calendar/components/schedule-manager";
+import { SeasonVenuesEditor } from "@/features/calendar/components/season-venues-editor";
 import { formatLevel, WEEKDAYS_SHORT } from "@/lib/calendar";
 
 export default async function ScheduleManagePage() {
   const user = await ensureAppUser();
   if (!canManageSchedule(user.roles)) redirect("/schedule");
 
-  const [venues, seasons] = await Promise.all([listVenues(), listSeasons()]);
+  const [venues, seasons, seasonVenueIds] = await Promise.all([
+    listVenues(),
+    listSeasons(),
+    getSeasonVenueMap(),
+  ]);
   const seriesBySeason = await Promise.all(
     seasons.map((s) => listSeriesForSeason(s.id)),
   );
@@ -25,14 +31,22 @@ export default async function ScheduleManagePage() {
         ← Schedule
       </Link>
       <h1 className="mb-1 mt-2 text-xl font-bold">Manage schedule</h1>
-      <p className="mb-6 text-sm text-zinc-400">
+      <p className="mb-4 text-sm text-zinc-400">
         Create a season, generate recurring practices per venue and level, or add
         a one-off. Each venue can have its own weekly schedule.
       </p>
 
+      <Link
+        href="/schedule/venues"
+        className="mb-6 inline-block rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-200"
+      >
+        Manage venues →
+      </Link>
+
       <ScheduleManager
         venues={venues}
         seasons={seasons.map((s) => ({ id: s.id, name: s.name }))}
+        seasonVenueIds={seasonVenueIds}
       />
 
       {seasons.length > 0 && (
@@ -51,6 +65,12 @@ export default async function ScheduleManagePage() {
                   {season.startDate.toISOString().slice(0, 10)} →{" "}
                   {season.endDate.toISOString().slice(0, 10)}
                 </p>
+                <SeasonVenuesEditor
+                  seasonId={season.id}
+                  venues={venues}
+                  selectedIds={seasonVenueIds[season.id] ?? []}
+                />
+                <div className="mt-3">
                 {seriesBySeason[i].length === 0 ? (
                   <p className="text-xs text-zinc-500">No recurring practices yet.</p>
                 ) : (
@@ -68,6 +88,7 @@ export default async function ScheduleManagePage() {
                     ))}
                   </ul>
                 )}
+                </div>
               </div>
             ))}
           </div>

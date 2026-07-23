@@ -24,7 +24,8 @@ Last updated: 2026-07-19
   - [x] In-app notifications on schedule change / cancel / coach assignment (dashboard + header badge + /notifications)
 - [ ] Private lessons on the calendar (next)
 - [ ] Web push notifications (currently in-app only)
-- [x] Brossard training hours: Summer to Sep 30 (Mon/Tue/Wed 8–10 PM, Sat 1:30–3:30, Sun 1–3), Winter Sep→Feb (Sun 3:15–5:15). Load in-app: Schedule → Manage → **Load Brossard hours** (one tap, phone-friendly, idempotent) or CLI `npm run db:seed:brossard`
+- [x] Brossard training hours: Summer to Sep 30 (Mon/Tue/Wed 8–10 PM, Sat 1:30–3:30, Sun 1–3), Winter Sep→Feb (Sun 3:15–5:15). Load via Ops runner `seed-brossard-hours` or CLI `npm run db:seed:brossard` (idempotent). General setup: in-app Schedule → Manage (seasons + venues)
+- [x] Per-season venues: admin creates a season with dates (any of the 4 badminton seasons) + attributes which venues it uses; recurring-practice venue picker scoped to the season's venues. In-app venue management (add/edit/deactivate) at `/schedule/venues` for court-rental changes
 - [ ] Per-venue distinct schedules beyond Ali + Brossard (data entry via Manage UI)
 - [x] Ops runner GitHub Action + OPS-AND-AGENTS.md: run seeds/migrations from GitHub mobile (dev free, prod manual-approval gate); Cloud Agent dev DB access via secret + env-setup prompt
 - [ ] In-app bulk season/series editing: change a whole series' weekly time/day and re-materialize future occurrences; discontinue a series from the Manage UI (per-practice reschedule/cancel/move already shipped)

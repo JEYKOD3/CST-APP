@@ -5,7 +5,6 @@ import {
   createSeason,
   createSeriesAndGenerate,
   createSinglePractice,
-  loadBrossardHours,
 } from "@/features/calendar/actions";
 import { PLAYER_LEVELS } from "@/lib/roles";
 
@@ -49,7 +48,6 @@ export function ScheduleManager({
   const [seasonState, setSeasonState] = useState<Result | null>(null);
   const [seriesState, setSeriesState] = useState<Result | null>(null);
   const [singleState, setSingleState] = useState<Result | null>(null);
-  const [brossardState, setBrossardState] = useState<Result | null>(null);
   const [seriesSeasonId, setSeriesSeasonId] = useState("");
 
   const seriesVenues = seriesSeasonId
@@ -72,33 +70,6 @@ export function ScheduleManager({
 
   return (
     <div className="space-y-6">
-      {/* One-tap Brossard hours */}
-      <section className="rounded-xl border border-[#8BC34A]/40 bg-zinc-900 p-4">
-        <h2 className="mb-1 font-semibold">Quick load: Brossard hours</h2>
-        <p className="mb-3 text-xs text-zinc-400">
-          Loads the standard Brossard training schedule in one tap — Summer
-          (Mon/Tue/Wed 8–10 PM, Sat 1:30–3:30 PM, Sun 1–3 PM) through Sep 30, and
-          Winter Sundays 3:15–5:15 PM. Safe to tap again; existing slots are
-          skipped.
-        </p>
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => {
-            setBrossardState(null);
-            startTransition(async () => {
-              setBrossardState(await loadBrossardHours());
-            });
-          }}
-          className="rounded-lg bg-[#8BC34A] px-3 py-1.5 text-xs font-semibold text-black disabled:opacity-50"
-        >
-          {pending ? "Loading…" : "Load Brossard hours"}
-        </button>
-        <div className="mt-1">
-          <Feedback state={brossardState} />
-        </div>
-      </section>
-
       {/* Create season */}
       <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
         <h2 className="mb-2 font-semibold">1. Create a season</h2>

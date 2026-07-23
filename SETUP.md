@@ -126,7 +126,7 @@ Assign additional super admins, coaches, and parents from in-app **Admin** (`/ad
 Admins manage the calendar entirely in-app — no local scripts required, so this works from a phone.
 
 1. Sign in as an admin → **Schedule** → **Manage schedule** (`/schedule/manage`).
-2. **Load Brossard hours** button — one tap loads the standard Brossard training schedule (Summer Mon/Tue/Wed 8–10 PM, Sat 1:30–3:30 PM, Sun 1–3 PM through Sep 30; Winter Sundays 3:15–5:15 PM). Idempotent — safe to tap again; existing slots are skipped.
-3. For any other venue/time, use **Generate recurring practices** or **Add a one-off practice** on the same page.
+2. **Manage venues** (add/edit/deactivate locations as court rentals change).
+3. **Create a season** with its dates and check which venues it uses; then **Generate recurring practices** (season + venue + weekdays + times), or **Add a one-off practice**.
 
-The button runs on the server (Vercel), so it uses whichever database that deployment points at — Neon **dev** on preview, Neon **main** on production. There is also an equivalent CLI: `npm run db:seed:brossard` (reads `DATABASE_URL` from `.env.local`).
+For the fixed Brossard preset (Summer Mon/Tue/Wed 8–10 PM, Sat 1:30–3:30 PM, Sun 1–3 PM through Sep 30; Winter Sundays 3:15–5:15 PM), run the **Ops runner** GitHub Action (`seed-brossard-hours`, target `dev`/`production`) or the CLI `npm run db:seed:brossard`. Both are idempotent.

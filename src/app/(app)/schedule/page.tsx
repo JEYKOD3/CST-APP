@@ -52,9 +52,9 @@ export default async function SchedulePage({
     <main>
       <div className="mb-4 flex items-start justify-between gap-2">
         <div>
-          <h1 className="text-xl font-bold">Schedule</h1>
-          <p className="text-sm text-zinc-400">
-            One synchronized calendar for every venue.
+          <h1 className="text-2xl font-bold tracking-tight">Schedule</h1>
+          <p className="text-sm text-[var(--cst-muted)]">
+            Practices by day
           </p>
         </div>
         {canManage && (

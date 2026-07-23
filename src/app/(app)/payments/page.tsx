@@ -13,11 +13,7 @@ export default async function PaymentsPage() {
   return (
     <main className="space-y-6">
       <div>
-        <h1 className="cst-page-title mb-1">Payments</h1>
-        <p className="text-sm text-zinc-400">
-          Review summer registrations and e-transfer proof — approve or reject
-          manually.
-        </p>
+        <h1 className="cst-page-title mb-6">Payments</h1>
       </div>
       <PaymentQueue pending={pending} />
     </main>

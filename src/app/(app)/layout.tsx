@@ -34,7 +34,7 @@ export default async function AppLayout({
           { href: "/attendance", label: "Attend", icon: "attend" },
           canManageTeam(user.roles)
             ? { href: "/admin", label: "Admin", icon: "admin" }
-            : { href: "/schedule/manage", label: "Manage", icon: "admin" },
+            : { href: "/schedule/manage", label: "Manage", icon: "manage" },
           { href: "/more", label: "More", icon: "more" },
         ]
       : [

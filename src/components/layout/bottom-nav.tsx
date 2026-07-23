@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 export type NavItem = {
   href: string;
   label: string;
-  icon: "home" | "schedule" | "attend" | "register" | "admin" | "more" | "kids";
+  icon: "home" | "schedule" | "attend" | "register" | "admin" | "manage" | "more" | "kids";
 };
 
 const ICONS: Record<NavItem["icon"], ReactNode> = {
@@ -35,8 +35,13 @@ const ICONS: Record<NavItem["icon"], ReactNode> = {
   ),
   admin: (
     <>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+      <path d="M12 3 4 6v5c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6z" />
+      <path d="M9.5 12.5 11 14l3.5-3.5" />
+    </>
+  ),
+  manage: (
+    <>
+      <path d="M4 6h16M4 12h16M4 18h10" />
     </>
   ),
   kids: (

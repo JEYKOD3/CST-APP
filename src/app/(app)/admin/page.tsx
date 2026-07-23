@@ -1,16 +1,43 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ensureAppUser } from "@/lib/auth";
-import { canManageTeam, formatRole, formatRoleGroup } from "@/lib/roles";
-import { cancelPendingInvite } from "@/features/admin/invites/actions";
+import { canManageTeam } from "@/lib/roles";
 import { listPendingInvites } from "@/features/admin/invites/queries";
-import { PaymentQueue } from "@/features/admin/components/payment-queue";
-import { removeRole } from "@/features/admin/users/actions";
 import { listAllUsers } from "@/features/admin/users/queries";
 import { listPendingRegistrations } from "@/features/registration/queries";
-import { AdminAddPlayerForm } from "@/features/admin/components/admin-add-player-form";
-import { AssignRoleForm } from "@/features/admin/components/assign-role-form";
-import { EditUserNameForm } from "@/features/admin/components/edit-user-name-form";
-import { InviteUserForm } from "@/features/admin/components/invite-user-form";
+
+const tiles = [
+  {
+    href: "/payments",
+    title: "Payments",
+    subtitle: "Review registrations",
+    key: "payments" as const,
+  },
+  {
+    href: "/admin/invites",
+    title: "Invites",
+    subtitle: "Add coaches & staff",
+    key: "invites" as const,
+  },
+  {
+    href: "/admin/accounts",
+    title: "Accounts",
+    subtitle: "Roles & names",
+    key: "accounts" as const,
+  },
+  {
+    href: "/admin/players",
+    title: "Players",
+    subtitle: "Add a child",
+    key: "players" as const,
+  },
+  {
+    href: "/schedule/manage",
+    title: "Schedule",
+    subtitle: "Seasons & slots",
+    key: "schedule" as const,
+  },
+];
 
 export default async function AdminPage() {
   const user = await ensureAppUser();
@@ -22,93 +49,34 @@ export default async function AdminPage() {
     listPendingRegistrations(),
   ]);
 
-  const users = Object.values(allUsers);
+  const badges: Record<string, number | undefined> = {
+    payments: pendingRegistrations.length || undefined,
+    invites: pendingInvites.length || undefined,
+    accounts: Object.keys(allUsers).length || undefined,
+  };
 
   return (
-    <main className="space-y-8">
-      <div>
-        <h1 className="cst-page-title mb-1">Admin</h1>
-        <p className="text-sm text-zinc-400">
-          Invite staff, manage roles, edit accounts, and add players at scale.
-          Super admins can promote or demote other super admins from here.
-        </p>
+    <main>
+      <h1 className="cst-page-title mb-6">Admin</h1>
+      <div className="grid grid-cols-2 gap-3">
+        {tiles.map((tile) => (
+          <Link
+            key={tile.href}
+            href={tile.href}
+            className="relative flex min-h-[7.5rem] flex-col justify-between rounded-2xl border border-[var(--cst-border)] bg-[var(--cst-surface)] p-4 active:scale-[0.98]"
+          >
+            {badges[tile.key] != null && (
+              <span className="absolute right-3 top-3 flex h-6 min-w-6 items-center justify-center rounded-full bg-[var(--cst-green)] px-1.5 text-[11px] font-bold text-black">
+                {badges[tile.key]}
+              </span>
+            )}
+            <span className="text-[length:var(--cst-text-base)] font-semibold text-zinc-50">
+              {tile.title}
+            </span>
+            <span className="cst-muted">{tile.subtitle}</span>
+          </Link>
+        ))}
       </div>
-
-      <PaymentQueue pending={pendingRegistrations} />
-
-      <InviteUserForm />
-
-      {pendingInvites.length > 0 && (
-        <section>
-          <h2 className="mb-3 font-semibold">Pending invites</h2>
-          <ul className="space-y-2">
-            {pendingInvites.map((invite) => (
-              <li
-                key={invite.id}
-                className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3"
-              >
-                <div>
-                  <p className="font-medium">{invite.email}</p>
-                  <p className="text-xs capitalize text-zinc-500">
-                    {invite.role.replace("_", " ")}
-                    {invite.clerkInvitationId ? " · email sent" : " · saved only"}
-                  </p>
-                </div>
-                <form action={cancelPendingInvite.bind(null, invite.id)}>
-                  <button
-                    type="submit"
-                    className="text-xs text-zinc-500 hover:text-red-400"
-                  >
-                    Cancel
-                  </button>
-                </form>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <section>
-        <h2 className="mb-3 font-semibold">Accounts ({users.length})</h2>
-        <ul className="space-y-2">
-          {users.map((member) => (
-            <li
-              key={member.userId}
-              className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3"
-            >
-              <p className="font-medium">{member.name ?? member.email}</p>
-              <p className="text-xs text-zinc-500">{member.email}</p>
-              <p className="mt-1 text-xs capitalize text-zinc-400">
-                {formatRoleGroup(member.roles) || member.roles.map(formatRole).join(" · ")}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {member.roles.map((role) => (
-                  <form
-                    key={role}
-                    action={removeRole.bind(null, member.userId, role)}
-                    className="inline"
-                  >
-                    <button
-                      type="submit"
-                      className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs capitalize text-zinc-300"
-                    >
-                      {formatRole(role)} ×
-                    </button>
-                  </form>
-                ))}
-              </div>
-              <EditUserNameForm
-                userId={member.userId}
-                currentName={member.name}
-              />
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <AssignRoleForm />
-
-      <AdminAddPlayerForm />
     </main>
   );
 }

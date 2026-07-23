@@ -22,25 +22,22 @@ export default async function AttendancePage() {
     const practices = await listCoachPractices();
     const rows: CoachPracticeRow[] = practices.map((p) => {
       const { day, time } = formatScheduleWhen(p.startsAt, p.endsAt);
+      const marked = p.finalized;
       return {
         eventId: p.id,
         title: p.title,
-        type: p.type,
         when: `${day} · ${time}`,
         venueName: p.venueName,
-        region: p.region,
         confirmed: p.confirmed,
         declined: p.declined,
-        finalized: p.finalized,
+        marked,
+        needsAction: p.confirmed > 0 && marked < p.confirmed,
       };
     });
 
     return (
       <main>
-        <h1 className="cst-page-title mb-1">Attendance</h1>
-        <p className="mb-6 text-sm text-zinc-400">
-          Open a practice to finalize present / absent. No more texting lists.
-        </p>
+        <h1 className="cst-page-title mb-6">Attendance</h1>
         <CoachPracticeList practices={rows} />
       </main>
     );
@@ -67,10 +64,7 @@ export default async function AttendancePage() {
 
     return (
       <main>
-        <h1 className="cst-page-title mb-1">Attendance</h1>
-        <p className="mb-6 text-sm text-zinc-400">
-          Let coaches know ahead of time who&apos;s coming to each practice.
-        </p>
+        <h1 className="cst-page-title mb-6">Attendance</h1>
         <ParentAttendanceList events={rows} />
       </main>
     );

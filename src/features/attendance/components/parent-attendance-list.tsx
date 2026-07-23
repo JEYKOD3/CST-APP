@@ -90,9 +90,8 @@ function ChildRow({ eventId, child }: { eventId: string; child: ParentChildRow }
 export function ParentAttendanceList({ events }: { events: ParentEventRow[] }) {
   if (events.length === 0) {
     return (
-      <p className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-sm text-zinc-400">
-        No upcoming practices to confirm yet. Add your children under Kids, then
-        check back once practices are scheduled.
+      <p className="cst-muted rounded-2xl border border-[var(--cst-border)] bg-[var(--cst-surface)] px-4 py-8 text-center">
+        No practices to confirm yet.
       </p>
     );
   }

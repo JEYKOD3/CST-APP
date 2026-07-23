@@ -83,6 +83,14 @@ When Vercel gives a new preview domain:
 2. Add `https://*.vercel.app` and your stable preview URL
 3. Re-test sign-in on phone
 
+## Running ops & DB tasks from your phone
+
+See **[OPS-AND-AGENTS.md](OPS-AND-AGENTS.md)** for:
+
+- **Ops runner** GitHub Action — run seeds / migrations from GitHub mobile (prod is behind a manual approval gate)
+- **Cloud Agent DB access** — add the Neon **dev** `DATABASE_URL` secret + an env-setup-agent prompt so agents can populate dev themselves
+- The mobile-first working model (in-app edits vs. ops runner vs. cloud agent)
+
 ## Troubleshooting
 
 | Problem | Fix |

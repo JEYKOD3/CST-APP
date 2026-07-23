@@ -1,0 +1,85 @@
+name: Ops runner
+
+# Run database/ops scripts from the GitHub UI (incl. the GitHub mobile app) —
+# no local terminal needed. Pick a task + target database and press "Run
+# workflow". Running against `production` waits for manual approval (configure
+# required reviewers on the `production` Environment in repo settings).
+#
+# One-time setup (repo → Settings → Environments):
+#   1. Create environment `dev`
+#        - Secret DATABASE_URL = Neon **dev** branch (pooled connection string)
+#        - No protection rules (runs immediately)
+#   2. Create environment `production`
+#        - Secret DATABASE_URL = Neon **main** branch (pooled connection string)
+#        - Protection rule: "Required reviewers" = you (manual approval gate)
+#
+# See .cursor/skills/cst-app-develop/OPS-AND-AGENTS.md for the full guide.
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Operation to run"
+        type: choice
+        required: true
+        options:
+          - seed-base (venues + fleet)
+          - seed-brossard-hours
+          - seed-ali-schedule
+          - grant-staff-roles
+          - normalize-roles
+          - migrate-registrations
+          - db-push (apply schema changes)
+      target:
+        description: "Database to run against"
+        type: choice
+        required: true
+        default: dev
+        options:
+          - dev
+          - production
+
+concurrency:
+  # Never run two ops against the same database at once; queue them instead.
+  group: ops-runner-${{ github.event.inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    # Selecting `production` uses the protected environment → manual approval.
+    environment: ${{ github.event.inputs.target }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run "${{ github.event.inputs.task }}" against ${{ github.event.inputs.target }}
+        env:
+          # Environment-scoped secret: dev vs production connection string.
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TASK: ${{ github.event.inputs.task }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "::error::DATABASE_URL is not set for this environment. Add it as an Environment secret (see workflow header)."
+            exit 1
+          fi
+          echo "Running: $TASK"
+          case "$TASK" in
+            "seed-base (venues + fleet)")   npm run db:seed ;;
+            "seed-brossard-hours")          npm run db:seed:brossard ;;
+            "seed-ali-schedule")            npx tsx scripts/seed-schedule.ts ;;
+            "grant-staff-roles")            npx tsx scripts/grant-staff-roles.ts ;;
+            "normalize-roles")              npx tsx scripts/normalize-all-roles.ts ;;
+            "migrate-registrations")        npx tsx scripts/migrate-registrations.ts ;;
+            "db-push (apply schema changes)") npm run db:push -- --verbose ;;
+            *) echo "::error::Unknown task: $TASK"; exit 1 ;;
+          esac
+          echo "Done."

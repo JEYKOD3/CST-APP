@@ -118,3 +118,15 @@ You do **not** need this for sign-in itself — only for **Admin → Invite by e
 | Coach | jeanyao5787@gmail.com |
 
 Assign additional super admins, coaches, and parents from in-app **Admin** (`/admin`). Bootstrap emails above get roles on first sign-in automatically.
+
+---
+
+## 7. Populate the schedule (no terminal needed)
+
+Admins manage the calendar entirely in-app — no local scripts required, so this works from a phone.
+
+1. Sign in as an admin → **Schedule** → **Manage schedule** (`/schedule/manage`).
+2. **Load Brossard hours** button — one tap loads the standard Brossard training schedule (Summer Mon/Tue/Wed 8–10 PM, Sat 1:30–3:30 PM, Sun 1–3 PM through Sep 30; Winter Sundays 3:15–5:15 PM). Idempotent — safe to tap again; existing slots are skipped.
+3. For any other venue/time, use **Generate recurring practices** or **Add a one-off practice** on the same page.
+
+The button runs on the server (Vercel), so it uses whichever database that deployment points at — Neon **dev** on preview, Neon **main** on production. There is also an equivalent CLI: `npm run db:seed:brossard` (reads `DATABASE_URL` from `.env.local`).

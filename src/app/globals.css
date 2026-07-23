@@ -1,8 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --cst-bg: #0a0a0a;
+  --cst-surface: #141414;
+  --cst-surface-2: #1a1a1a;
+  --cst-border: #27272a;
+  --cst-green: #8bc34a;
+  --cst-green-dim: rgba(139, 195, 74, 0.12);
+  --cst-red: #c45c4a;
+  --cst-text: #f4f4f5;
+  --cst-muted: #a1a1aa;
+  --cst-faint: #71717a;
+  --background: var(--cst-bg);
+  --foreground: var(--cst-text);
 }
 
 @theme inline {
@@ -12,15 +22,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: var(--cst-bg);
+  color: var(--cst-text);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Comfortable thumb targets on mobile */
+.cst-tap {
+  min-height: 44px;
+  min-width: 44px;
 }

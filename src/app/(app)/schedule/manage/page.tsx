@@ -10,6 +10,7 @@ import {
   listVenues,
 } from "@/features/calendar/queries";
 import { ScheduleManager } from "@/features/calendar/components/schedule-manager";
+import { SeasonEditor } from "@/features/calendar/components/season-editor";
 import { SeasonVenuesEditor } from "@/features/calendar/components/season-venues-editor";
 import {
   SeasonSlots,
@@ -58,8 +59,8 @@ export default async function ScheduleManagePage() {
       </Link>
       <h1 className="mb-1 mt-2 text-xl font-bold">Manage schedule</h1>
       <p className="mb-4 text-sm text-zinc-400">
-        Create a season, generate recurring practices per venue and level, or add
-        a one-off. Each venue can have its own weekly schedule.
+        Seasons → venues → weekly practice slots. Edit or remove a slot to update
+        upcoming practices (past ones stay). Everyone is notified on changes.
       </p>
 
       <Link
@@ -86,16 +87,34 @@ export default async function ScheduleManagePage() {
                 key={season.id}
                 className="rounded-xl border border-zinc-800 bg-zinc-900 p-4"
               >
-                <p className="font-medium text-[#8BC34A]">{season.name}</p>
+                <p className="font-medium text-[#8BC34A]">
+                  {season.name}
+                  {!season.active && (
+                    <span className="ml-2 text-xs font-normal text-amber-500">
+                      (archived)
+                    </span>
+                  )}
+                </p>
                 <p className="mb-2 text-xs text-zinc-500">
                   {season.startDate.toISOString().slice(0, 10)} →{" "}
                   {season.endDate.toISOString().slice(0, 10)}
                 </p>
-                <SeasonVenuesEditor
-                  seasonId={season.id}
-                  venues={venues}
-                  selectedIds={seasonVenueIds[season.id] ?? []}
+                <SeasonEditor
+                  season={{
+                    id: season.id,
+                    name: season.name,
+                    startDate: season.startDate.toISOString().slice(0, 10),
+                    endDate: season.endDate.toISOString().slice(0, 10),
+                    active: season.active,
+                  }}
                 />
+                {season.active && (
+                  <SeasonVenuesEditor
+                    seasonId={season.id}
+                    venues={venues}
+                    selectedIds={seasonVenueIds[season.id] ?? []}
+                  />
+                )}
                 <div className="mt-4">
                   <SeasonSlots
                     slots={slotsBySeason[i]}

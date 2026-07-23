@@ -4,13 +4,18 @@ import { ensureAppUser } from "@/lib/auth";
 import { canManageSchedule } from "@/lib/roles";
 import {
   getSeasonVenueMap,
+  getSeriesEventStats,
   listSeasons,
   listSeriesForSeason,
   listVenues,
 } from "@/features/calendar/queries";
 import { ScheduleManager } from "@/features/calendar/components/schedule-manager";
 import { SeasonVenuesEditor } from "@/features/calendar/components/season-venues-editor";
-import { formatLevel, WEEKDAYS_SHORT } from "@/lib/calendar";
+import {
+  SeasonSlots,
+  type Slot,
+} from "@/features/calendar/components/season-slots";
+import { formatDayHeading } from "@/lib/calendar";
 
 export default async function ScheduleManagePage() {
   const user = await ensureAppUser();
@@ -23,6 +28,27 @@ export default async function ScheduleManagePage() {
   ]);
   const seriesBySeason = await Promise.all(
     seasons.map((s) => listSeriesForSeason(s.id)),
+  );
+  const allSeriesIds = seriesBySeason.flat().map((s) => s.id);
+  const stats = await getSeriesEventStats(allSeriesIds);
+
+  const slotsBySeason: Slot[][] = seriesBySeason.map((series) =>
+    series.map((s) => {
+      const st = stats.get(s.id);
+      return {
+        id: s.id,
+        venueId: s.venueId,
+        venueName: s.venueName,
+        title: s.title,
+        level: s.level,
+        dayOfWeek: s.dayOfWeek,
+        startTime: s.startTime,
+        endTime: s.endTime,
+        active: s.active,
+        upcoming: st?.upcoming ?? 0,
+        nextLabel: st?.nextStartsAt ? formatDayHeading(st.nextStartsAt) : null,
+      };
+    }),
   );
 
   return (
@@ -70,24 +96,13 @@ export default async function ScheduleManagePage() {
                   venues={venues}
                   selectedIds={seasonVenueIds[season.id] ?? []}
                 />
-                <div className="mt-3">
-                {seriesBySeason[i].length === 0 ? (
-                  <p className="text-xs text-zinc-500">No recurring practices yet.</p>
-                ) : (
-                  <ul className="space-y-1 text-xs text-zinc-300">
-                    {seriesBySeason[i].map((s) => (
-                      <li key={s.id} className="flex justify-between gap-2">
-                        <span>
-                          {WEEKDAYS_SHORT[s.dayOfWeek]} {s.startTime}–{s.endTime} ·{" "}
-                          {s.title}
-                        </span>
-                        <span className="text-zinc-500">
-                          {s.region} · {formatLevel(s.level as never)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <div className="mt-4">
+                  <SeasonSlots
+                    slots={slotsBySeason[i]}
+                    venues={venues.filter((v) =>
+                      (seasonVenueIds[season.id] ?? []).includes(v.id),
+                    )}
+                  />
                 </div>
               </div>
             ))}

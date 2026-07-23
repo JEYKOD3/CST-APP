@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ensureAppUser } from "@/lib/auth";
-import { canManageSchedule } from "@/lib/roles";
+import { canManageSchedule, canManageTeam } from "@/lib/roles";
 import {
   getSeasonVenueMap,
   getSeriesEventStats,
@@ -21,6 +21,7 @@ import { formatDayHeading } from "@/lib/calendar";
 export default async function ScheduleManagePage() {
   const user = await ensureAppUser();
   if (!canManageSchedule(user.roles)) redirect("/schedule");
+  const isSuperAdmin = canManageTeam(user.roles);
 
   const [venues, seasons, seasonVenueIds] = await Promise.all([
     listVenues(),
@@ -100,6 +101,7 @@ export default async function ScheduleManagePage() {
                   {season.endDate.toISOString().slice(0, 10)}
                 </p>
                 <SeasonEditor
+                  canDelete={isSuperAdmin}
                   season={{
                     id: season.id,
                     name: season.name,

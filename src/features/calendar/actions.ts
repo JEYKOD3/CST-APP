@@ -23,7 +23,12 @@ import {
   WEEKDAYS,
   zonedTimeToUtc,
 } from "@/lib/calendar";
-import { canManageSchedule, PLAYER_LEVELS, type PlayerLevel } from "@/lib/roles";
+import {
+  canManageSchedule,
+  canManageTeam,
+  PLAYER_LEVELS,
+  type PlayerLevel,
+} from "@/lib/roles";
 import { notifyAllUsers, notifyUsers } from "@/features/notifications/create";
 import { clubToday, seedBrossardHours } from "@/features/calendar/seed-brossard";
 
@@ -219,6 +224,65 @@ export async function archiveSeason(formData: FormData): Promise<ActionResult> {
   return {
     ok: true,
     message: `Season archived. Removed ${removed} upcoming practice(s). Past ones kept. Everyone was notified.`,
+  };
+}
+
+/**
+ * Super admin only: permanently delete a season.
+ * Upcoming practices are removed; past practices stay in the DB (their series
+ * link is cleared when the season cascades). Everyone is notified.
+ */
+export async function deleteSeason(formData: FormData): Promise<ActionResult> {
+  const user = await ensureAppUser();
+  if (!canManageTeam(user.roles)) {
+    return { error: "Only super admins can delete a whole season." };
+  }
+
+  const seasonId = String(formData.get("seasonId") ?? "");
+  if (!seasonId) return { error: "Missing season." };
+
+  const db = getDb();
+  const [season] = await db
+    .select()
+    .from(seasons)
+    .where(eq(seasons.id, seasonId))
+    .limit(1);
+  if (!season) return { error: "Season not found." };
+
+  const seriesRows = await db
+    .select({ id: practiceSeries.id })
+    .from(practiceSeries)
+    .where(eq(practiceSeries.seasonId, seasonId));
+
+  let removed = 0;
+  for (const { id: seriesId } of seriesRows) {
+    const deleted = await db
+      .delete(scheduleEvents)
+      .where(
+        and(
+          eq(scheduleEvents.seriesId, seriesId),
+          gte(scheduleEvents.startsAt, new Date()),
+        ),
+      )
+      .returning({ id: scheduleEvents.id });
+    removed += deleted.length;
+  }
+
+  // Deleting the season cascades practice_series + season_venues; past
+  // schedule_events keep their rows with series_id set to null.
+  await db.delete(seasons).where(eq(seasons.id, seasonId));
+
+  await notifyAllUsers({
+    type: "practice_canceled",
+    title: `Season deleted: ${season.name}`,
+    body: `This season was removed. Upcoming practices are gone; past practices remain for records.`,
+  });
+
+  revalidatePath("/schedule");
+  revalidatePath("/schedule/manage");
+  return {
+    ok: true,
+    message: `Season deleted. Removed ${removed} upcoming practice(s). Past ones kept. Everyone was notified.`,
   };
 }
 

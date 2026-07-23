@@ -2,7 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { archiveSeason, updateSeason } from "@/features/calendar/actions";
+import {
+  archiveSeason,
+  deleteSeason,
+  updateSeason,
+} from "@/features/calendar/actions";
 
 const inputClass =
   "w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100";
@@ -12,6 +16,7 @@ type Result = { ok?: boolean; error?: string; message?: string };
 
 export function SeasonEditor({
   season,
+  canDelete = false,
 }: {
   season: {
     id: string;
@@ -20,19 +25,13 @@ export function SeasonEditor({
     endDate: string;
     active: boolean;
   };
+  /** Super admins only — hard-delete the whole season. */
+  canDelete?: boolean;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
   const [state, setState] = useState<Result | null>(null);
-
-  if (!season.active) {
-    return (
-      <p className="mb-2 text-xs text-amber-500/80">
-        Archived — past practices kept; no new schedule changes.
-      </p>
-    );
-  }
 
   function save(formData: FormData) {
     setState(null);
@@ -65,6 +64,50 @@ export function SeasonEditor({
     });
   }
 
+  function removeSeason() {
+    if (
+      !confirm(
+        `DELETE season "${season.name}" permanently?\n\nThis removes the season and all upcoming practices. Past practices stay in the database. Everyone will be notified.\n\nThis cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    setState(null);
+    const fd = new FormData();
+    fd.set("seasonId", season.id);
+    startTransition(async () => {
+      const res = await deleteSeason(fd);
+      setState(res);
+      if (res?.ok) router.refresh();
+    });
+  }
+
+  if (!season.active) {
+    return (
+      <div className="mb-3">
+        <p className="mb-2 text-xs text-amber-500/80">
+          Archived — past practices kept; no new schedule changes.
+        </p>
+        {canDelete && (
+          <button
+            type="button"
+            onClick={removeSeason}
+            disabled={pending}
+            className="text-xs font-medium text-red-400 underline disabled:opacity-50"
+          >
+            {pending ? "Deleting…" : "Delete season permanently"}
+          </button>
+        )}
+        {state?.error && (
+          <p className="mt-1 text-xs text-red-400">{state.error}</p>
+        )}
+        {state?.message && (
+          <p className="mt-1 text-xs text-[#8BC34A]">{state.message}</p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="mb-3">
       <div className="flex flex-wrap gap-2">
@@ -83,10 +126,23 @@ export function SeasonEditor({
         >
           Archive season
         </button>
+        {canDelete && (
+          <button
+            type="button"
+            onClick={removeSeason}
+            disabled={pending}
+            className="text-xs font-medium text-red-500 underline disabled:opacity-50"
+          >
+            Delete season
+          </button>
+        )}
       </div>
 
       {editing && (
-        <form action={save} className="mt-3 space-y-2 rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
+        <form
+          action={save}
+          className="mt-3 space-y-2 rounded-lg border border-zinc-800 bg-zinc-950/60 p-3"
+        >
           <label className={labelClass}>
             Season name
             <input

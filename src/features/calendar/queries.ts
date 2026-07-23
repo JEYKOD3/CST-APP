@@ -190,18 +190,63 @@ export async function listSeriesForSeason(seasonId: string) {
     .select({
       id: practiceSeries.id,
       title: practiceSeries.title,
+      type: practiceSeries.type,
       level: practiceSeries.level,
       dayOfWeek: practiceSeries.dayOfWeek,
       startTime: practiceSeries.startTime,
       endTime: practiceSeries.endTime,
       active: practiceSeries.active,
+      venueId: practiceSeries.venueId,
       venueName: practiceVenues.name,
       region: practiceVenues.region,
     })
     .from(practiceSeries)
     .innerJoin(practiceVenues, eq(practiceVenues.id, practiceSeries.venueId))
     .where(eq(practiceSeries.seasonId, seasonId))
-    .orderBy(asc(practiceSeries.dayOfWeek), asc(practiceSeries.startTime));
+    .orderBy(
+      asc(practiceVenues.name),
+      asc(practiceSeries.dayOfWeek),
+      asc(practiceSeries.startTime),
+    );
+}
+
+export type SeriesEventStats = {
+  upcoming: number;
+  total: number;
+  nextStartsAt: Date | null;
+};
+
+/**
+ * Per-series counts of generated practices: total, upcoming (from now, not
+ * canceled) and the next upcoming start. One grouped query — no per-series loop.
+ */
+export async function getSeriesEventStats(
+  seriesIds: string[],
+): Promise<Map<string, SeriesEventStats>> {
+  const result = new Map<string, SeriesEventStats>();
+  if (seriesIds.length === 0) return result;
+
+  const db = getDb();
+  const rows = await db
+    .select({
+      seriesId: scheduleEvents.seriesId,
+      total: sql<number>`count(*)`,
+      upcoming: sql<number>`count(*) filter (where ${scheduleEvents.startsAt} >= now() and ${scheduleEvents.canceled} = false)`,
+      nextStartsAt: sql<Date | null>`min(${scheduleEvents.startsAt}) filter (where ${scheduleEvents.startsAt} >= now() and ${scheduleEvents.canceled} = false)`,
+    })
+    .from(scheduleEvents)
+    .where(inArray(scheduleEvents.seriesId, seriesIds))
+    .groupBy(scheduleEvents.seriesId);
+
+  for (const r of rows) {
+    if (!r.seriesId) continue;
+    result.set(r.seriesId, {
+      total: Number(r.total),
+      upcoming: Number(r.upcoming),
+      nextStartsAt: r.nextStartsAt ? new Date(r.nextStartsAt) : null,
+    });
+  }
+  return result;
 }
 
 /** Coaches available for assignment (users with the coach role). */

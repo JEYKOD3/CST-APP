@@ -1,5 +1,5 @@
 import { getDb } from "@/db";
-import { notifications } from "@/db/schema";
+import { appUsers, notifications } from "@/db/schema";
 
 type NotificationType =
   | "practice_created"
@@ -34,4 +34,17 @@ export async function notifyUsers(input: NewNotification): Promise<void> {
       relatedEventId: input.relatedEventId ?? null,
     })),
   );
+}
+
+/**
+ * Fan out a notification to EVERY account in the system (parents, players,
+ * coaches, admins) — used for club-wide schedule changes. Fetches all user ids
+ * then batch-inserts through {@link notifyUsers}.
+ */
+export async function notifyAllUsers(
+  input: Omit<NewNotification, "userIds">,
+): Promise<void> {
+  const db = getDb();
+  const rows = await db.select({ id: appUsers.id }).from(appUsers);
+  await notifyUsers({ ...input, userIds: rows.map((r) => r.id) });
 }

@@ -15,13 +15,16 @@ import {
 } from "@/db/schema";
 import { ensureAppUser } from "@/lib/auth";
 import {
+  dayKey,
   formatDayHeading,
+  formatLevel,
   formatTimeRange,
   generateWeeklyOccurrences,
+  WEEKDAYS,
   zonedTimeToUtc,
 } from "@/lib/calendar";
 import { canManageSchedule, PLAYER_LEVELS, type PlayerLevel } from "@/lib/roles";
-import { notifyUsers } from "@/features/notifications/create";
+import { notifyAllUsers, notifyUsers } from "@/features/notifications/create";
 import { clubToday, seedBrossardHours } from "@/features/calendar/seed-brossard";
 
 type ActionResult = { ok?: boolean; error?: string; message?: string };
@@ -283,11 +286,25 @@ export async function createSeriesAndGenerate(
     }
   }
 
+  if (totalGenerated > 0) {
+    const [venue] = await db
+      .select({ name: practiceVenues.name })
+      .from(practiceVenues)
+      .where(eq(practiceVenues.id, venueId))
+      .limit(1);
+    const dayNames = days.map((d) => WEEKDAYS[d]).join(", ");
+    await notifyAllUsers({
+      type: "practice_created",
+      title: `New practices added: ${title}`,
+      body: `${venue?.name ?? "A venue"} — ${dayNames}, ${startTime}–${endTime} (${formatLevel(level)}).`,
+    });
+  }
+
   revalidatePath("/schedule");
   revalidatePath("/schedule/manage");
   return {
     ok: true,
-    message: `Generated ${totalGenerated} practices across ${days.length} weekday(s).`,
+    message: `Generated ${totalGenerated} practices across ${days.length} weekday(s). Everyone was notified.`,
   };
 }
 
@@ -316,19 +333,32 @@ export async function createSinglePractice(
   }
 
   const db = getDb();
+  const startsAt = zonedTimeToUtc(date, startTime);
+  const endsAt = zonedTimeToUtc(date, endTime);
   await db.insert(scheduleEvents).values({
     type: type as (typeof SESSION_TYPES)[number],
     title,
     venueId,
     level,
-    startsAt: zonedTimeToUtc(date, startTime),
-    endsAt: zonedTimeToUtc(date, endTime),
+    startsAt,
+    endsAt,
     notes,
     createdByUserId: user.id,
   });
 
+  const [venue] = await db
+    .select({ name: practiceVenues.name })
+    .from(practiceVenues)
+    .where(eq(practiceVenues.id, venueId))
+    .limit(1);
+  await notifyAllUsers({
+    type: "practice_created",
+    title: `New practice: ${title}`,
+    body: `${formatDayHeading(startsAt)}, ${formatTimeRange(startsAt, endsAt)} at ${venue?.name ?? "the venue"}.`,
+  });
+
   revalidatePath("/schedule");
-  return { ok: true, message: "Practice added." };
+  return { ok: true, message: "Practice added and everyone notified." };
 }
 
 export async function updatePractice(formData: FormData): Promise<ActionResult> {
@@ -500,7 +530,111 @@ export async function unassignCoach(formData: FormData): Promise<ActionResult> {
   return { ok: true, message: "Coach removed." };
 }
 
-/** Delete all future occurrences of a series (e.g. slot discontinued). */
+/**
+ * Edit a recurring slot (venue / level / hours / title) for a whole season and
+ * push the change to every UPCOMING generated practice, leaving past practices
+ * untouched as historical record. Everyone in the system is notified.
+ */
+export async function updateSeries(formData: FormData): Promise<ActionResult> {
+  const user = await ensureAppUser();
+  if (!canManageSchedule(user.roles)) {
+    return { error: "Only admins can edit practice slots." };
+  }
+
+  const seriesId = String(formData.get("seriesId") ?? "");
+  const venueId = String(formData.get("venueId") ?? "");
+  const title = String(formData.get("title") ?? "").trim();
+  const level = parseLevel(String(formData.get("level") ?? ""));
+  const startTime = String(formData.get("startTime") ?? "");
+  const endTime = String(formData.get("endTime") ?? "");
+
+  if (!seriesId || !venueId || !title || !startTime || !endTime) {
+    return { error: "Venue, title and time are required." };
+  }
+  if (startTime >= endTime) {
+    return { error: "End time must be after the start time." };
+  }
+
+  const db = getDb();
+  const [series] = await db
+    .select()
+    .from(practiceSeries)
+    .where(eq(practiceSeries.id, seriesId))
+    .limit(1);
+  if (!series) return { error: "Practice slot not found." };
+
+  const [attributed] = await db
+    .select({ id: seasonVenues.id })
+    .from(seasonVenues)
+    .where(
+      and(
+        eq(seasonVenues.seasonId, series.seasonId),
+        eq(seasonVenues.venueId, venueId),
+      ),
+    )
+    .limit(1);
+  if (!attributed) {
+    return {
+      error:
+        "That venue isn't attributed to this season. Add it to the season's venues first.",
+    };
+  }
+
+  await db
+    .update(practiceSeries)
+    .set({ venueId, level, title, startTime, endTime })
+    .where(eq(practiceSeries.id, seriesId));
+
+  // Re-time and re-venue every upcoming occurrence in place (keep their dates).
+  const upcoming = await db
+    .select({ id: scheduleEvents.id, startsAt: scheduleEvents.startsAt })
+    .from(scheduleEvents)
+    .where(
+      and(
+        eq(scheduleEvents.seriesId, seriesId),
+        gte(scheduleEvents.startsAt, new Date()),
+        eq(scheduleEvents.canceled, false),
+      ),
+    );
+
+  for (const ev of upcoming) {
+    const dateStr = dayKey(ev.startsAt);
+    await db
+      .update(scheduleEvents)
+      .set({
+        venueId,
+        level,
+        title,
+        startsAt: zonedTimeToUtc(dateStr, startTime),
+        endsAt: zonedTimeToUtc(dateStr, endTime),
+        updatedAt: new Date(),
+      })
+      .where(eq(scheduleEvents.id, ev.id));
+  }
+
+  const [venue] = await db
+    .select({ name: practiceVenues.name })
+    .from(practiceVenues)
+    .where(eq(practiceVenues.id, venueId))
+    .limit(1);
+  await notifyAllUsers({
+    type: "practice_updated",
+    title: `Schedule updated: ${title}`,
+    body: `${WEEKDAYS[series.dayOfWeek]} practices are now ${startTime}–${endTime} at ${venue?.name ?? "the venue"} (${formatLevel(level)}).`,
+  });
+
+  revalidatePath("/schedule");
+  revalidatePath("/schedule/manage");
+  return {
+    ok: true,
+    message: `Updated ${upcoming.length} upcoming practice(s). Everyone was notified.`,
+  };
+}
+
+/**
+ * Delete all future occurrences of a series (e.g. slot discontinued), keeping
+ * past practices in the database for records. Everyone is notified.
+ */
 export async function deleteFutureSeriesOccurrences(
   formData: FormData,
 ): Promise<ActionResult> {
@@ -512,20 +646,42 @@ export async function deleteFutureSeriesOccurrences(
   if (!seriesId) return { error: "Missing series." };
 
   const db = getDb();
-  await db
+  const [series] = await db
+    .select()
+    .from(practiceSeries)
+    .where(eq(practiceSeries.id, seriesId))
+    .limit(1);
+  if (!series) return { error: "Practice slot not found." };
+
+  const removed = await db
     .delete(scheduleEvents)
     .where(
       and(
         eq(scheduleEvents.seriesId, seriesId),
         gte(scheduleEvents.startsAt, new Date()),
       ),
-    );
+    )
+    .returning({ id: scheduleEvents.id });
   await db
     .update(practiceSeries)
     .set({ active: false })
     .where(eq(practiceSeries.id, seriesId));
 
+  const [venue] = await db
+    .select({ name: practiceVenues.name })
+    .from(practiceVenues)
+    .where(eq(practiceVenues.id, series.venueId))
+    .limit(1);
+  await notifyAllUsers({
+    type: "practice_canceled",
+    title: `Practices removed: ${series.title}`,
+    body: `${WEEKDAYS[series.dayOfWeek]} ${series.startTime}–${series.endTime} at ${venue?.name ?? "the venue"} is discontinued for the rest of the season.`,
+  });
+
   revalidatePath("/schedule");
   revalidatePath("/schedule/manage");
-  return { ok: true, message: "Future occurrences removed." };
+  return {
+    ok: true,
+    message: `Removed ${removed.length} upcoming practice(s). Past ones are kept. Everyone was notified.`,
+  };
 }

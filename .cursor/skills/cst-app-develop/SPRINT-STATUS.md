@@ -28,7 +28,10 @@ Last updated: 2026-07-19
 - [x] Per-season venues: admin creates a season with dates (any of the 4 badminton seasons) + attributes which venues it uses; recurring-practice venue picker scoped to the season's venues. In-app venue management (add/edit/deactivate) at `/schedule/venues` for court-rental changes
 - [ ] Per-venue distinct schedules beyond Ali + Brossard (data entry via Manage UI)
 - [x] Ops runner GitHub Action + OPS-AND-AGENTS.md: run seeds/migrations from GitHub mobile (dev free, prod manual-approval gate); Cloud Agent dev DB access via secret + env-setup prompt
-- [ ] In-app bulk season/series editing: change a whole series' weekly time/day and re-materialize future occurrences; discontinue a series from the Manage UI (per-practice reschedule/cancel/move already shipped)
+- [x] In-app bulk season/series editing: change a whole series' weekly time/day and re-materialize future occurrences; discontinue a series from the Manage UI (per-practice reschedule/cancel/move already shipped)
+  - [x] Per-venue slot edit (hours/venue/level/title) → updates upcoming practices, keeps past; notifies everyone
+  - [x] Remove slot → deletes upcoming only, keeps past; notifies everyone
+  - [x] Edit season name/dates + archive season (remove all upcoming across venues, keep past)
 - [ ] Admin-scheduled privates on master calendar
 - [ ] Notices publish UI
 

@@ -23,7 +23,12 @@ import {
   WEEKDAYS,
   zonedTimeToUtc,
 } from "@/lib/calendar";
-import { canManageSchedule, PLAYER_LEVELS, type PlayerLevel } from "@/lib/roles";
+import {
+  canManageSchedule,
+  canManageTeam,
+  PLAYER_LEVELS,
+  type PlayerLevel,
+} from "@/lib/roles";
 import { notifyAllUsers, notifyUsers } from "@/features/notifications/create";
 import { clubToday, seedBrossardHours } from "@/features/calendar/seed-brossard";
 
@@ -109,6 +114,175 @@ export async function createSeason(formData: FormData): Promise<ActionResult> {
   return {
     ok: true,
     message: `Season "${name}" created${venueIds.length ? ` with ${venueIds.length} venue(s)` : ""}.`,
+  };
+}
+
+/** Edit a season's name and date range. Does not re-materialize practices. */
+export async function updateSeason(formData: FormData): Promise<ActionResult> {
+  const user = await ensureAppUser();
+  if (!canManageSchedule(user.roles)) {
+    return { error: "Only admins can edit seasons." };
+  }
+
+  const seasonId = String(formData.get("seasonId") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  const startDate = String(formData.get("startDate") ?? "");
+  const endDate = String(formData.get("endDate") ?? "");
+
+  if (!seasonId || !name || !startDate || !endDate) {
+    return { error: "Name, start date and end date are required." };
+  }
+  if (startDate > endDate) {
+    return { error: "End date must be after the start date." };
+  }
+
+  const db = getDb();
+  const [existing] = await db
+    .select({ id: seasons.id, active: seasons.active })
+    .from(seasons)
+    .where(eq(seasons.id, seasonId))
+    .limit(1);
+  if (!existing) return { error: "Season not found." };
+  if (!existing.active) return { error: "This season is archived." };
+
+  await db
+    .update(seasons)
+    .set({
+      name,
+      slug: slugify(name) || `season-${Date.now()}`,
+      startDate: new Date(`${startDate}T00:00:00Z`),
+      endDate: new Date(`${endDate}T00:00:00Z`),
+    })
+    .where(eq(seasons.id, seasonId));
+
+  revalidatePath("/schedule/manage");
+  return { ok: true, message: `Season "${name}" updated.` };
+}
+
+/**
+ * Archive a season: keep all past practices in the DB, remove upcoming ones
+ * for every slot/venue in the season, mark series + season inactive, notify
+ * everyone.
+ */
+export async function archiveSeason(formData: FormData): Promise<ActionResult> {
+  const user = await ensureAppUser();
+  if (!canManageSchedule(user.roles)) {
+    return { error: "Only admins can archive seasons." };
+  }
+
+  const seasonId = String(formData.get("seasonId") ?? "");
+  if (!seasonId) return { error: "Missing season." };
+
+  const db = getDb();
+  const [season] = await db
+    .select()
+    .from(seasons)
+    .where(eq(seasons.id, seasonId))
+    .limit(1);
+  if (!season) return { error: "Season not found." };
+  if (!season.active) return { error: "This season is already archived." };
+
+  const seriesRows = await db
+    .select({ id: practiceSeries.id })
+    .from(practiceSeries)
+    .where(eq(practiceSeries.seasonId, seasonId));
+  const seriesIds = seriesRows.map((s) => s.id);
+
+  let removed = 0;
+  if (seriesIds.length > 0) {
+    for (const seriesId of seriesIds) {
+      const deleted = await db
+        .delete(scheduleEvents)
+        .where(
+          and(
+            eq(scheduleEvents.seriesId, seriesId),
+            gte(scheduleEvents.startsAt, new Date()),
+          ),
+        )
+        .returning({ id: scheduleEvents.id });
+      removed += deleted.length;
+    }
+    await db
+      .update(practiceSeries)
+      .set({ active: false })
+      .where(eq(practiceSeries.seasonId, seasonId));
+  }
+
+  await db
+    .update(seasons)
+    .set({ active: false })
+    .where(eq(seasons.id, seasonId));
+
+  await notifyAllUsers({
+    type: "practice_canceled",
+    title: `Season archived: ${season.name}`,
+    body: `Upcoming practices for this season were removed. Past practices stay on the calendar for records.`,
+  });
+
+  revalidatePath("/schedule");
+  revalidatePath("/schedule/manage");
+  return {
+    ok: true,
+    message: `Season archived. Removed ${removed} upcoming practice(s). Past ones kept. Everyone was notified.`,
+  };
+}
+
+/**
+ * Super admin only: permanently delete a season.
+ * Upcoming practices are removed; past practices stay in the DB (their series
+ * link is cleared when the season cascades). Everyone is notified.
+ */
+export async function deleteSeason(formData: FormData): Promise<ActionResult> {
+  const user = await ensureAppUser();
+  if (!canManageTeam(user.roles)) {
+    return { error: "Only super admins can delete a whole season." };
+  }
+
+  const seasonId = String(formData.get("seasonId") ?? "");
+  if (!seasonId) return { error: "Missing season." };
+
+  const db = getDb();
+  const [season] = await db
+    .select()
+    .from(seasons)
+    .where(eq(seasons.id, seasonId))
+    .limit(1);
+  if (!season) return { error: "Season not found." };
+
+  const seriesRows = await db
+    .select({ id: practiceSeries.id })
+    .from(practiceSeries)
+    .where(eq(practiceSeries.seasonId, seasonId));
+
+  let removed = 0;
+  for (const { id: seriesId } of seriesRows) {
+    const deleted = await db
+      .delete(scheduleEvents)
+      .where(
+        and(
+          eq(scheduleEvents.seriesId, seriesId),
+          gte(scheduleEvents.startsAt, new Date()),
+        ),
+      )
+      .returning({ id: scheduleEvents.id });
+    removed += deleted.length;
+  }
+
+  // Deleting the season cascades practice_series + season_venues; past
+  // schedule_events keep their rows with series_id set to null.
+  await db.delete(seasons).where(eq(seasons.id, seasonId));
+
+  await notifyAllUsers({
+    type: "practice_canceled",
+    title: `Season deleted: ${season.name}`,
+    body: `This season was removed. Upcoming practices are gone; past practices remain for records.`,
+  });
+
+  revalidatePath("/schedule");
+  revalidatePath("/schedule/manage");
+  return {
+    ok: true,
+    message: `Season deleted. Removed ${removed} upcoming practice(s). Past ones kept. Everyone was notified.`,
   };
 }
 

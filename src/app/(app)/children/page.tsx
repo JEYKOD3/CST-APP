@@ -13,7 +13,7 @@ export default async function ChildrenPage() {
 
   return (
     <main>
-      <h1 className="mb-1 text-xl font-bold">My children</h1>
+      <h1 className="cst-page-title mb-1">My children</h1>
       <p className="mb-6 text-sm text-zinc-400">
         One parent account — add every child who trains at CST.
       </p>

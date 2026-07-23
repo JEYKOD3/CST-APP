@@ -32,7 +32,7 @@ export default async function NotificationsPage() {
 
   return (
     <main>
-      <h1 className="mb-1 text-xl font-bold">Notifications</h1>
+      <h1 className="cst-page-title mb-1">Notifications</h1>
       <p className="mb-6 text-sm text-zinc-400">
         Schedule changes, cancellations, and coach assignments — no more texts.
       </p>

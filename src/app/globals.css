@@ -13,6 +13,18 @@
   --cst-faint: #71717a;
   --background: var(--cst-bg);
   --foreground: var(--cst-text);
+
+  /* Type scale — Geist, 16px body, airy (user pick 1A 2A 3A 4A) */
+  --cst-text-base: 1rem; /* 16px */
+  --cst-text-sm: 0.9375rem; /* 15px — secondary */
+  --cst-text-xs: 0.8125rem; /* 13px — captions / nav */
+  --cst-text-caption: 0.75rem; /* 12px — meta only */
+  --cst-text-title: 1.375rem; /* 22px — page titles */
+  --cst-text-display: 1.5rem; /* 24px — home greeting */
+  --cst-leading-body: 1.4;
+  --cst-leading-title: 1.25;
+  --cst-space-section: 2rem;
+  --cst-space-block: 1.25rem;
 }
 
 @theme inline {
@@ -22,10 +34,64 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  font-feature-settings: "kern" 1, "liga" 1;
+  text-rendering: optimizeLegibility;
+}
+
 body {
   background: var(--cst-bg);
   color: var(--cst-text);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: var(--cst-text-base);
+  line-height: var(--cst-leading-body);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Page title: same family, bold, slightly larger than body */
+.cst-page-title {
+  font-size: var(--cst-text-title);
+  font-weight: 700;
+  line-height: var(--cst-leading-title);
+  letter-spacing: -0.01em;
+  color: var(--cst-text);
+  hyphens: none;
+}
+
+.cst-display {
+  font-size: var(--cst-text-display);
+  font-weight: 700;
+  line-height: var(--cst-leading-title);
+  letter-spacing: -0.015em;
+  color: #fafafa;
+  hyphens: none;
+}
+
+.cst-section-title {
+  font-size: var(--cst-text-base);
+  font-weight: 600;
+  line-height: var(--cst-leading-title);
+  color: #e4e4e7;
+}
+
+.cst-muted {
+  font-size: var(--cst-text-sm);
+  line-height: var(--cst-leading-body);
+  color: var(--cst-muted);
+}
+
+.cst-caption {
+  font-size: var(--cst-text-caption);
+  line-height: 1.35;
+  color: var(--cst-faint);
+}
+
+.cst-label {
+  font-size: var(--cst-text-xs);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--cst-text);
 }
 
 /* Comfortable thumb targets on mobile */

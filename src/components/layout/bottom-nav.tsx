@@ -93,7 +93,7 @@ export function BottomNav({ items }: { items: NavItem[] }) {
                 {ICONS[item.icon]}
               </svg>
               <span
-                className={`text-[10px] leading-none ${
+                className={`text-[length:var(--cst-text-caption)] leading-none ${
                   active ? "font-semibold" : "font-medium"
                 }`}
               >

@@ -34,7 +34,7 @@ export default async function AttendanceRosterPage({
       <Link href="/attendance" className="text-xs text-zinc-500">
         ← All practices
       </Link>
-      <h1 className="mb-1 mt-2 text-xl font-bold">{event.title}</h1>
+      <h1 className="cst-page-title mb-1 mt-2">{event.title}</h1>
       <p className="mb-6 text-sm text-zinc-400">
         {day} · {time} · {event.venueName} ({event.region})
       </p>

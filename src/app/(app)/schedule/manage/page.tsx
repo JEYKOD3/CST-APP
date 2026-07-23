@@ -58,7 +58,7 @@ export default async function ScheduleManagePage() {
       <Link href="/schedule" className="text-xs text-zinc-500">
         ← Schedule
       </Link>
-      <h1 className="mb-1 mt-2 text-xl font-bold">Manage schedule</h1>
+      <h1 className="cst-page-title mb-1 mt-2">Manage schedule</h1>
       <p className="mb-4 text-sm text-zinc-400">
         Seasons → venues → weekly practice slots. Edit or remove a slot to update
         upcoming practices (past ones stay). Everyone is notified on changes.

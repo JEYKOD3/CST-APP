@@ -27,7 +27,7 @@ export default async function AdminPage() {
   return (
     <main className="space-y-8">
       <div>
-        <h1 className="mb-1 text-xl font-bold">Admin</h1>
+        <h1 className="cst-page-title mb-1">Admin</h1>
         <p className="text-sm text-zinc-400">
           Invite staff, manage roles, edit accounts, and add players at scale.
           Super admins can promote or demote other super admins from here.

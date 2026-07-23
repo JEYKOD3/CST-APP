@@ -37,7 +37,7 @@ export default async function AttendancePage() {
 
     return (
       <main>
-        <h1 className="mb-1 text-xl font-bold">Attendance</h1>
+        <h1 className="cst-page-title mb-1">Attendance</h1>
         <p className="mb-6 text-sm text-zinc-400">
           Open a practice to finalize present / absent. No more texting lists.
         </p>
@@ -67,7 +67,7 @@ export default async function AttendancePage() {
 
     return (
       <main>
-        <h1 className="mb-1 text-xl font-bold">Attendance</h1>
+        <h1 className="cst-page-title mb-1">Attendance</h1>
         <p className="mb-6 text-sm text-zinc-400">
           Let coaches know ahead of time who&apos;s coming to each practice.
         </p>

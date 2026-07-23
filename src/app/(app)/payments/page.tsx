@@ -13,7 +13,7 @@ export default async function PaymentsPage() {
   return (
     <main className="space-y-6">
       <div>
-        <h1 className="mb-1 text-xl font-bold">Payments</h1>
+        <h1 className="cst-page-title mb-1">Payments</h1>
         <p className="text-sm text-zinc-400">
           Review summer registrations and e-transfer proof — approve or reject
           manually.

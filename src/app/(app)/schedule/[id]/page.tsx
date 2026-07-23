@@ -62,7 +62,7 @@ export default async function ScheduleEventPage({
       </Link>
 
       <div className="mt-2 flex items-start justify-between gap-2">
-        <h1 className="text-xl font-bold">{event.title}</h1>
+        <h1 className="cst-page-title">{event.title}</h1>
         <span className="shrink-0 rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300">
           {formatLevel(event.level)}
         </span>

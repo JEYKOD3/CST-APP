@@ -44,8 +44,8 @@ export default async function AppLayout({
         ];
 
   return (
-    <div className="mx-auto min-h-full w-full max-w-lg px-4 pb-28 pt-3">
-      <header className="mb-4 flex items-center justify-between gap-3">
+    <div className="mx-auto min-h-full w-full max-w-lg px-5 pb-28 pt-4">
+      <header className="mb-6 flex items-center justify-between gap-3">
         <Link href="/dashboard" className="flex min-w-0 items-center">
           <Image
             src="/cst-logo.jpg"

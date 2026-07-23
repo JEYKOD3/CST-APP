@@ -25,10 +25,10 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border border-[var(--cst-border)] bg-[var(--cst-surface)] px-2 text-center active:scale-[0.98]"
+      className="flex aspect-square flex-col items-center justify-center gap-2.5 rounded-2xl border border-[var(--cst-border)] bg-[var(--cst-surface)] px-2 text-center active:scale-[0.98]"
     >
       <span className="text-[var(--cst-green)]">{icon}</span>
-      <span className="text-xs font-medium text-zinc-100">{label}</span>
+      <span className="cst-label">{label}</span>
     </Link>
   );
 }
@@ -133,31 +133,27 @@ export default async function DashboardPage() {
 
   return (
     <main>
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-50">
-          Hi, {greeting}
-        </h1>
-        <p className="text-sm text-[var(--cst-muted)]">
-          {formatRoleGroup(user.roles)}
-        </p>
+      <div className="mb-8">
+        <h1 className="cst-display">Hi, {greeting}</h1>
+        <p className="cst-muted mt-1">{formatRoleGroup(user.roles)}</p>
       </div>
 
       {unread.length > 0 && (
         <Link
           href="/notifications"
-          className="mb-5 flex items-center gap-3 rounded-2xl border border-[var(--cst-green)]/25 bg-[var(--cst-green-dim)] p-4"
+          className="mb-8 flex items-center gap-3 rounded-2xl border border-[var(--cst-green)]/25 bg-[var(--cst-green-dim)] p-5"
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--cst-green)]/20 text-[var(--cst-green)]">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--cst-green)]/20 text-[var(--cst-green)]">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
               <path d="M3 11v-1a9 9 0 0 1 18 0v1" />
               <path d="M21 15H3l2 5h14z" />
             </svg>
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold text-[var(--cst-green)]">
+            <span className="block text-[length:var(--cst-text-sm)] font-semibold text-[var(--cst-green)]">
               {unread.length} new update{unread.length > 1 ? "s" : ""}
             </span>
-            <span className="block truncate text-xs text-zinc-300">
+            <span className="cst-muted mt-0.5 block truncate">
               {unread[0].title}
             </span>
           </span>
@@ -167,11 +163,9 @@ export default async function DashboardPage() {
         </Link>
       )}
 
-      <section className="mb-6">
-        <h2 className="mb-3 text-sm font-semibold text-zinc-200">
-          Quick actions
-        </h2>
-        <div className="grid grid-cols-4 gap-2">
+      <section className="mb-8">
+        <h2 className="cst-section-title mb-4">Quick actions</h2>
+        <div className="grid grid-cols-4 gap-3">
           {quick.map((a) => (
             <QuickAction
               key={a.href + a.label}
@@ -184,22 +178,22 @@ export default async function DashboardPage() {
       </section>
 
       <section>
-        <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold text-zinc-200">Upcoming</h2>
+        <div className="mb-4 flex items-baseline justify-between gap-3">
+          <h2 className="cst-section-title">Upcoming</h2>
           <Link
             href="/schedule"
-            className="text-xs font-medium text-[var(--cst-green)]"
+            className="text-[length:var(--cst-text-xs)] font-medium text-[var(--cst-green)]"
           >
             View all
           </Link>
         </div>
 
         {upcoming.length === 0 ? (
-          <p className="rounded-2xl border border-[var(--cst-border)] bg-[var(--cst-surface)] px-4 py-6 text-center text-sm text-[var(--cst-muted)]">
+          <p className="cst-muted rounded-2xl border border-[var(--cst-border)] bg-[var(--cst-surface)] px-5 py-8 text-center">
             No practices in the next 2 weeks.
           </p>
         ) : (
-          <ul className="space-y-2">
+          <ul className="space-y-3">
             {upcoming.map((event) => {
               const d = event.startsAt;
               const mon = d.toLocaleString("en-CA", {
@@ -218,21 +212,29 @@ export default async function DashboardPage() {
                 <li key={event.id}>
                   <Link
                     href={`/schedule/${event.id}`}
-                    className="flex items-center gap-3 rounded-2xl border border-[var(--cst-border)] bg-[var(--cst-surface)] p-3 active:scale-[0.99]"
+                    className="flex items-center gap-3.5 rounded-2xl border border-[var(--cst-border)] bg-[var(--cst-surface)] p-4 active:scale-[0.99]"
                   >
-                    <div className="flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-[var(--cst-green)] text-[11px] font-bold leading-tight text-black">
+                    <div
+                      className="flex h-16 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-[var(--cst-green)] font-bold leading-tight text-black"
+                      style={{
+                        fontSize: "0.6875rem",
+                        letterSpacing: "0.06em",
+                      }}
+                    >
                       <span>{mon.toUpperCase()}</span>
-                      <span className="text-lg leading-none">{day}</span>
+                      <span className="text-xl leading-none tracking-normal">
+                        {day}
+                      </span>
                       <span>{weekday.toUpperCase()}</span>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-zinc-50">
+                      <p className="truncate text-[length:var(--cst-text-base)] font-semibold text-zinc-50">
                         {event.title}
                       </p>
-                      <p className="truncate text-xs text-[var(--cst-green)]">
+                      <p className="mt-0.5 truncate text-[length:var(--cst-text-sm)] text-[var(--cst-green)]">
                         {formatTimeRange(event.startsAt, event.endsAt)}
                       </p>
-                      <p className="truncate text-xs text-[var(--cst-muted)]">
+                      <p className="cst-muted mt-0.5 truncate">
                         {event.venueName}
                         {event.region && event.region !== event.venueName
                           ? ` · ${event.region}`

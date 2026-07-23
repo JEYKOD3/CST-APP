@@ -16,7 +16,7 @@ export default async function VenuesPage() {
       <Link href="/schedule/manage" className="text-xs text-zinc-500">
         ← Manage schedule
       </Link>
-      <h1 className="mb-1 mt-2 text-xl font-bold">Venues</h1>
+      <h1 className="cst-page-title mb-1 mt-2">Venues</h1>
       <p className="mb-6 text-sm text-zinc-400">
         Add or edit venues as court rentals change. Deactivated venues stay on
         past practices but are hidden from new-practice pickers and season

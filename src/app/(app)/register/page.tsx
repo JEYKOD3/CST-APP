@@ -31,7 +31,7 @@ export default async function RegisterPage() {
 
   return (
     <main>
-      <h1 className="mb-1 text-xl font-bold">Register</h1>
+      <h1 className="cst-page-title mb-1">Register</h1>
       <p className="mb-6 text-sm text-zinc-400">
         {CURRENT_REGISTRATION_LABEL} — submit e-transfer proof for CST to
         approve.

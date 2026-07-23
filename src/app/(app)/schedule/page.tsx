@@ -50,12 +50,10 @@ export default async function SchedulePage({
 
   return (
     <main>
-      <div className="mb-4 flex items-start justify-between gap-2">
+      <div className="mb-6 flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Schedule</h1>
-          <p className="text-sm text-[var(--cst-muted)]">
-            Practices by day
-          </p>
+          <h1 className="cst-page-title">Schedule</h1>
+          <p className="cst-muted mt-1">Practices by day</p>
         </div>
         {canManage && (
           <Link

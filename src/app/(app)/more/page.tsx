@@ -40,25 +40,23 @@ export default async function MorePage() {
 
   return (
     <main>
-      <h1 className="mb-1 text-2xl font-bold tracking-tight">More</h1>
-      <p className="mb-5 truncate text-sm text-[var(--cst-muted)]">
-        {user.email}
-      </p>
+      <h1 className="cst-page-title mb-1">More</h1>
+      <p className="cst-muted mb-8 truncate">{user.email}</p>
 
       <ul className="divide-y divide-[var(--cst-border)] overflow-hidden rounded-2xl border border-[var(--cst-border)] bg-[var(--cst-surface)]">
         {rows.map((item) => (
           <li key={item.label}>
             {item.href === "#" ? (
-              <span className="flex items-center justify-between px-4 py-3.5 text-sm text-[var(--cst-faint)]">
+              <span className="flex items-center justify-between px-5 py-4 text-[length:var(--cst-text-base)] text-[var(--cst-faint)]">
                 {item.label}
                 {item.hint && (
-                  <span className="text-xs text-zinc-600">{item.hint}</span>
+                  <span className="cst-caption">{item.hint}</span>
                 )}
               </span>
             ) : (
               <Link
                 href={item.href}
-                className="flex items-center justify-between px-4 py-3.5 text-sm text-zinc-100 active:bg-zinc-900"
+                className="flex items-center justify-between px-5 py-4 text-[length:var(--cst-text-base)] text-zinc-100 active:bg-zinc-900"
               >
                 {item.label}
                 <span className="text-[var(--cst-green)]" aria-hidden>
